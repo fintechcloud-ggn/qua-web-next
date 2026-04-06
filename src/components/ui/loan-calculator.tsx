@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { Calculator, Gem, ShieldCheck } from "lucide-react"
 
 export default function LoanCalculator({ onApplyClick }: { onApplyClick: () => void }) {
   const [amount, setAmount] = useState(25000)
@@ -72,7 +73,7 @@ export default function LoanCalculator({ onApplyClick }: { onApplyClick: () => v
         <motion.div className="text-center mb-14"
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-600 text-xs font-bold uppercase tracking-widest mb-4 shadow-sm">
-            🧮 Loan Calculator
+            <Calculator className="w-3.5 h-3.5" /> Loan Calculator
           </div>
           <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3">
             Find Your{" "}
@@ -177,15 +178,15 @@ export default function LoanCalculator({ onApplyClick }: { onApplyClick: () => v
 
             <div className="mt-5 pt-5 border-t border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
-                <span className="text-blue-500 text-lg">💎</span>
+                <Gem className="w-4 h-4 text-blue-500" />
                 1.5% flat per month · Zero prepayment penalty
               </div>
               <motion.button onClick={onApplyClick}
-                className="px-6 py-2.5 rounded-full text-white text-sm font-bold cursor-pointer shadow-md shadow-blue-500/20"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-full text-white text-sm font-bold cursor-pointer shadow-md shadow-blue-500/20"
                 style={{ background: "linear-gradient(135deg,#3b82f6,#4f46e5)" }}
                 whileHover={{ scale: 1.04, boxShadow: "0 8px 24px rgba(59,130,246,0.3)" }}
                 whileTap={{ scale: 0.97 }}>
-                🚀 Apply for {fmt(amount)}
+                <ShieldCheck className="w-4 h-4" /> Apply for {fmt(amount)}
               </motion.button>
             </div>
           </motion.div>
