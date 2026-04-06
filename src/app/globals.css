@@ -128,3 +128,5 @@
     @apply font-sans;
   }
 }
+@keyframes parallax_fg { 0% { background-position: 2765px 100%; } 100% { background-position: 550px 100%; } }
+@keyframes parallax_bike { 0% { background-position: -300px 100%; } 100% { background-position: 2000px 100%; } }
