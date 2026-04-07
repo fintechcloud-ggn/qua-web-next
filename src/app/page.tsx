@@ -10,9 +10,23 @@ import HowItWorks from "@/components/ui/how-it-works"
 import FeaturesSection from "@/components/ui/features-section"
 import TestimonialsSection from "@/components/ui/testimonials-section"
 import CtaSection from "@/components/ui/cta-section"
+import FAQSection from "@/components/ui/faq-section"
 import LoanApplyModal from "@/components/ui/loan-apply-modal"
 import Confetti from "@/components/ui/confetti"
 import Footer from "@/components/ui/footer"
+
+function FadeIn({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {children}
+    </motion.div>
+  )
+}
 
 export default function Home() {
   const [showModal, setShowModal] = useState(false)
@@ -35,12 +49,13 @@ export default function Home() {
       <div className="relative z-10">
         <Navbar onApplyClick={() => setShowModal(true)} />
         <HeroSection onApplyClick={() => setShowModal(true)} />
-        <StatsSection />
-        <LoanCalculator onApplyClick={() => setShowModal(true)} />
-        <HowItWorks />
-        <FeaturesSection />
-        <TestimonialsSection />
-        <CtaSection onApplyClick={() => setShowModal(true)} />
+        <FadeIn delay={0.1}><StatsSection /></FadeIn>
+        <FadeIn delay={0.1}><LoanCalculator onApplyClick={() => setShowModal(true)} /></FadeIn>
+        <FadeIn delay={0.1}><HowItWorks /></FadeIn>
+        <FadeIn delay={0.1}><FeaturesSection /></FadeIn>
+        <FadeIn delay={0.1}><TestimonialsSection /></FadeIn>
+        <FadeIn delay={0.1}><FAQSection /></FadeIn>
+        <FadeIn delay={0.1}><CtaSection onApplyClick={() => setShowModal(true)} /></FadeIn>
         <Footer />
       </div>
 

@@ -29,33 +29,33 @@ const NOISE_SWIRL_FACTOR = 0.2;
 // Number of fractal noise octaves in fbm (must be integer).
 const FBM_OCTAVES = 10;
 
-// 20-step palette of professional Trust Blue (deep ocean to very pale frost blue).
-const blueColors = [
-  [0.10, 0.30, 0.60], // Darkest trust blue
-  [0.15, 0.35, 0.65],
-  [0.20, 0.40, 0.70],
-  [0.25, 0.45, 0.75],
-  [0.30, 0.50, 0.80],
-  [0.35, 0.55, 0.85],
-  [0.40, 0.60, 0.90],
-  [0.45, 0.65, 0.92],
-  [0.50, 0.70, 0.94],
-  [0.55, 0.75, 0.95],
-  [0.60, 0.80, 0.96],
-  [0.65, 0.85, 0.97],
-  [0.70, 0.88, 0.98],
-  [0.75, 0.90, 0.98],
-  [0.80, 0.92, 0.99],
-  [0.85, 0.94, 0.99],
-  [0.90, 0.96, 1.00],
-  [0.95, 0.98, 1.00],
-  [0.98, 0.99, 1.00],
+// 20-step palette of Midnight Violet & Indigo.
+const violetColors = [
+  [0.05, 0.02, 0.10], // Deepest dark purple
+  [0.08, 0.03, 0.15],
+  [0.10, 0.04, 0.20],
+  [0.12, 0.05, 0.25],
+  [0.15, 0.06, 0.30],
+  [0.20, 0.08, 0.40],
+  [0.25, 0.10, 0.50],
+  [0.30, 0.12, 0.60],
+  [0.35, 0.15, 0.70],
+  [0.40, 0.20, 0.80],
+  [0.50, 0.30, 0.90],
+  [0.60, 0.40, 0.95],
+  [0.70, 0.50, 0.98],
+  [0.80, 0.60, 1.00],
+  [0.85, 0.70, 1.00],
+  [0.90, 0.80, 1.00],
+  [0.92, 0.85, 1.00],
+  [0.95, 0.90, 1.00],
+  [0.98, 0.95, 1.00],
   [1.00, 1.00, 1.00] 
 ];
 
 function buildFragmentShader(): string {
   const fbmOctavesInt = Math.floor(FBM_OCTAVES);
-  const colorArraySrc = blueColors.map((c) => `vec3(${c[0]}, ${c[1]}, ${c[2]})`).join(",\n  ");
+  const colorArraySrc = violetColors.map((c) => `vec3(${c[0]}, ${c[1]}, ${c[2]})`).join(",\n  ");
 
   return `#version 300 es
 
@@ -64,10 +64,11 @@ out vec4 outColor;
 
 uniform vec2 uResolution;
 uniform float uTime;
+uniform vec2 uMouse;
 
 #define NUM_COLORS 20
 
-vec3 blueColors[NUM_COLORS] = vec3[](
+vec3 violetColors[NUM_COLORS] = vec3[](
   ${colorArraySrc}
 );
 
@@ -139,6 +140,11 @@ void main() {
 
   uv *= float(${ZOOM_FACTOR});
   float t = uTime * float(${TIME_FACTOR});
+  
+  // Transform mouse coordinate from pixels into our uv-space
+  vec2 mouseUV = (uMouse.xy / uResolution.xy) * 2.0 - 1.0;
+  mouseUV.x *= uResolution.x / uResolution.y;
+  mouseUV *= float(${ZOOM_FACTOR});
 
   float waveAmp = float(${BASE_WAVE_AMPLITUDE}) + float(${RANDOM_WAVE_FACTOR})
                   * noise2D(vec2(t, 27.7));
@@ -156,7 +162,12 @@ void main() {
   angle += swirlStrength * sin(uTime + r * float(${SWIRL_TIME_MULT}));
   uv = vec2(cos(angle), sin(angle)) * r;
 
-  float n = fbm(uv);
+  // Enhanced Interactive Glow
+  float distToMouse = length(uv - mouseUV);
+  float mouseGlow = smoothstep(1.5, 0.0, distToMouse) * 0.35; // Brightness near mouse
+  float mouseWarp = smoothstep(2.0, 0.0, distToMouse) * 0.15; // Warp the ripples
+  
+  float n = fbm(uv + (mouseUV - uv) * mouseWarp);
   float swirlEffect = float(${NOISE_SWIRL_FACTOR}) * sin(t + n * 3.0);
   n += swirlEffect;
 
@@ -166,12 +177,15 @@ void main() {
   int iHigh = int(min(float(iLow + 1), float(NUM_COLORS - 1)));
   float f = fract(idx);
 
-  vec3 colLow = blueColors[iLow];
-  vec3 colHigh = blueColors[iHigh];
+  vec3 colLow = violetColors[iLow];
+  vec3 colHigh = violetColors[iHigh];
   vec3 color = mix(colLow, colHigh, f);
 
+  // Add the interactive mouse glow over the calculated color (Neon Violet glow)
+  color += vec3(0.6, 0.2, 1.0) * mouseGlow;
+
   // Use full opacity everywhere (no transparent dark regions)
-  outColor = vec4(color, 1.0);
+  outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
 `;
 }
@@ -273,11 +287,28 @@ export default function ShaderBackground() {
 
     const uResolutionLoc = gl.getUniformLocation(program, "uResolution");
     const uTimeLoc = gl.getUniformLocation(program, "uTime");
+    const uMouseLoc = gl.getUniformLocation(program, "uMouse");
 
     const startTime = performance.now();
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let targetMouseX = mouseX;
+    let targetMouseY = mouseY;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // For WebGL, Y=0 is bottom, so we invert Y
+      targetMouseX = e.clientX;
+      targetMouseY = window.innerHeight - e.clientY;
+    };
+    window.addEventListener("mousemove", handleMouseMove);
 
     function render() {
       const elapsed = (performance.now() - startTime) * 0.001;
+      
+      // Smoothly interpolate mouse position for fluid trailing effect
+      mouseX += (targetMouseX - mouseX) * 0.05;
+      mouseY += (targetMouseY - mouseY) * 0.05;
+
       if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -290,6 +321,9 @@ export default function ShaderBackground() {
       gl.bindVertexArray(vao);
       gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
       gl.uniform1f(uTimeLoc, elapsed);
+      if (uMouseLoc) {
+        gl.uniform2f(uMouseLoc, mouseX, mouseY);
+      }
 
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       requestAnimationFrame(render);
@@ -306,9 +340,12 @@ export default function ShaderBackground() {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", handleResize);
-      gl.deleteProgram(program);
-      gl.deleteBuffer(vbo);
-      gl.deleteVertexArray(vao!);
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (gl) {
+        gl.deleteProgram(program);
+        gl.deleteBuffer(vbo);
+        gl.deleteVertexArray(vao!);
+      }
     };
   }, []);
 
@@ -319,7 +356,7 @@ export default function ShaderBackground() {
         className="absolute inset-0 h-full w-full"
         style={{
           background:
-            "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.2), transparent 35%), linear-gradient(180deg, #dbeafe 0%, #eff6ff 45%, #ffffff 100%)",
+            "radial-gradient(circle at 20% 20%, rgba(15,2,30,0.5), transparent 35%), linear-gradient(180deg, #05020a 0%, #1e1b4b 45%, #05020a 100%)",
         }}
       />
     </div>

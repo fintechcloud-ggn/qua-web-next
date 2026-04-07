@@ -34,8 +34,8 @@ export const TestimonialsColumn = (props: {
             {props.testimonials.map(({ text, image, name, role, amount, time, rating }, i) => (
               <div
                 key={i}
-                className="p-6 rounded-2xl border border-gray-200 max-w-xs w-full backdrop-blur-md transition-all duration-300 hover:border-blue-400 hover:shadow-xl hover:shadow-blue-500/10 shadow-sm"
-                style={{ background: "rgba(255,255,255,0.85)" }}
+                className="p-6 rounded-2xl border border-white/10 max-w-xs w-full backdrop-blur-md transition-all duration-300 hover:border-white/30 hover:shadow-xl hover:shadow-white/5 shadow-sm"
+                style={{ background: "rgba(0,0,0,0.4)" }}
               >
                 {/* Stars */}
                 <div className="text-amber-400 text-xs mb-3">
@@ -43,7 +43,7 @@ export const TestimonialsColumn = (props: {
                 </div>
 
                 {/* Quote text */}
-                <p className="text-gray-600 font-medium text-sm leading-relaxed">
+                <p className="text-gray-300 font-medium text-sm leading-relaxed">
                   &ldquo;{text}&rdquo;
                 </p>
 
@@ -64,17 +64,17 @@ export const TestimonialsColumn = (props: {
                 )}
 
                 {/* Author */}
-                <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
                   <img
                     width={40}
                     height={40}
                     src={image}
                     alt={name}
-                    className="h-10 w-10 rounded-full object-cover ring-2 ring-gray-100"
+                    className="h-10 w-10 rounded-full object-cover ring-2 ring-white/10"
                   />
                   <div className="flex flex-col">
-                    <div className="font-bold text-sm text-gray-900 leading-5">{name}</div>
-                    <div className="text-[11px] text-gray-500 leading-5 tracking-tight font-medium uppercase">{role}</div>
+                    <div className="font-bold text-sm text-white leading-5">{name}</div>
+                    <div className="text-[11px] text-gray-400 leading-5 tracking-tight font-medium uppercase">{role}</div>
                   </div>
                 </div>
               </div>

@@ -1,132 +1,191 @@
 "use client"
-import { useState } from "react"
-import { motion } from "framer-motion"
+import { useState, useRef } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Zap, Shield, BarChart, CreditCard, Smartphone, Rocket, Trophy, Headphones } from "lucide-react"
 
 const features = [
-  { icon: "⚡", title: "Lightning Approval", desc: "AI processes in under 60 seconds. No manual delays or branch visits.", badge: "< 60 sec", color: "#f59e0b", size: "large" },
-  { icon: "🔒", title: "Bank-Grade Security", desc: "256-bit SSL. DPDP compliant.", badge: "256-bit SSL", color: "#10b981", size: "small" },
-  { icon: "📊", title: "No CIBIL Required", desc: "Income-first evaluation. Any score welcome.", badge: "Any Score", color: "#3b82f6", size: "small" },
-  { icon: "💳", title: "Flexible Repayment", desc: "7 to 90 days. Zero prepayment penalty. Extend anytime.", badge: "7–90 days", color: "#8b5cf6", size: "medium" },
-  { icon: "📱", title: "100% Digital", desc: "iOS & Android. Apply, track, repay from your phone.", badge: "Mobile First", color: "#06b6d4", size: "medium" },
-  { icon: "🚀", title: "IMPS Disbursal", desc: "5–30 minutes to your bank, 24/7, every day.", badge: "5 min", color: "#ef4444", size: "small" },
-  { icon: "🏆", title: "Loyalty Rewards", desc: "Earn QuaCoins on repayments. Redeem for lower rates.", badge: "QuaCoins", color: "#f59e0b", size: "small" },
-  { icon: "🤝", title: "24/7 Support", desc: "Real humans, always available, any hour.", badge: "Always On", color: "#10b981", size: "small" },
+  {
+    icon: <Zap className="w-6 h-6" />,
+    title: "Instant Disbursement",
+    subtitle: "Under 15 Mins",
+    desc: "Your money shouldn't wait. Receive funds in your bank account via IMPS within 15 minutes of final approval.",
+    color: "#f59e0b"
+  },
+  {
+    icon: <BarChart className="w-6 h-6" />,
+    title: "High Approval Rate",
+    subtitle: "95% Approvals",
+    desc: "Our proprietary evaluation system looks past classic scorecards, leading to a 95% approval rate for qualified applicants.",
+    color: "#3b82f6"
+  },
+  {
+    icon: <Smartphone className="w-6 h-6" />,
+    title: "100% Digital Process",
+    subtitle: "No Branch Visit",
+    desc: "Ditch the paperwork. Complete your entire KYC, application, and tracking straight from your phone securely.",
+    color: "#10b981"
+  },
+  {
+    icon: <Rocket className="w-6 h-6" />,
+    title: "No Collateral Needed",
+    subtitle: "Unsecured Loans",
+    desc: "Access liquidity simply based on your creditworthiness and earnings. Zero property or assets required as security.",
+    color: "#ef4444"
+  },
+  {
+    icon: <Shield className="w-6 h-6" />,
+    title: "Secure & Private",
+    subtitle: "Bank-Grade SSL",
+    desc: "Your financial privacy is guaranteed. We utilize strict 256-bit encryption and are fully compliant with all DPDP regulations.",
+    color: "#8b5cf6"
+  },
+  {
+    icon: <Headphones className="w-6 h-6" />,
+    title: "24/7 Support",
+    subtitle: "Always Accessible",
+    desc: "Whenever you need help, our dedicated customer support team is available round the clock.",
+    color: "#06b6d4"
+  },
+  {
+    icon: <CreditCard className="w-6 h-6" />,
+    title: "Transparent Policies",
+    subtitle: "Zero Hidden Fees",
+    desc: "What you see is what you pay. We operate with 100% transparency on interest rates and processing charges with absolutely no hidden fees.",
+    color: "#f59e0b"
+  }
 ]
 
-export default function FeaturesSection() {
-  const [hovered, setHovered] = useState<number | null>(null)
-  const glass = "rgba(255,255,255,0.7)"
+// Custom Feature Card with Mouse Spotlight
+function FeatureCard({ f, isHovered, handleHover, handleLeave }: any) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+  }
 
   return (
-    <section id="features" className="py-24">
-      <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-16 max-w-6xl mx-auto" />
+    <motion.div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleHover}
+      onMouseLeave={handleLeave}
+      layout
+      className="relative rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-end p-6 border transition-all"
+      style={{
+        border: isHovered ? `1px solid ${f.color}70` : "1px solid rgba(255,255,255,0.05)",
+        background: "rgba(0,0,0,0.4)",
+        backdropFilter: "blur(20px)",
+      }}
+      animate={{
+        width: isHovered ? "45%" : "18%",
+        flexGrow: isHovered ? 2 : 1, // fallback for flex layouts
+      }}
+      initial={{ width: "25%" }}
+      transition={{ type: "spring", stiffness: 200, damping: 25 }}
+    >
+      {/* Mouse Spotlight Glow */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300"
+        animate={{ opacity: isHovered ? 1 : 0 }}
+        style={{
+          background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px, ${f.color}15, transparent 40%)`,
+        }}
+      />
 
-      <div className="max-w-6xl mx-auto px-6">
-        <motion.div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6"
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-600 text-xs font-bold uppercase tracking-widest mb-4 shadow-sm">
-              ✨ Features
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900">
-              Why{" "}
-              <span className="text-transparent bg-clip-text"
-                style={{ backgroundImage: "linear-gradient(135deg,#2563eb,#4f46e5,#9333ea)" }}>
-                1 Lakh+
-              </span>
-              <br />Choose Us
-            </h2>
+      <div className="relative z-10 flex flex-col h-full justify-between">
+        <motion.div layout className="mb-4">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm"
+            style={{ background: `${f.color}15`, color: f.color }}
+          >
+            {f.icon}
           </div>
-          <p className="text-gray-500 text-base max-w-xs md:text-right font-medium">
-            Built for speed, trust, and your financial freedom.
-          </p>
         </motion.div>
 
-        {/* BENTO GRID */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-auto">
-
-          {/* Hero card — spans 2 cols & 2 rows */}
-          <motion.div
-            onHoverStart={() => setHovered(0)}
-            onHoverEnd={() => setHovered(null)}
-            className="col-span-2 row-span-2 rounded-3xl p-8 border transition-all duration-300 cursor-default backdrop-blur-md relative overflow-hidden"
-            style={{
-              background: hovered === 0 ? `linear-gradient(to bottom right, #ffffff, ${features[0].color}15)` : glass,
-              borderColor: hovered === 0 ? `${features[0].color}40` : "rgba(0,0,0,0.05)",
-              boxShadow: hovered === 0 ? `0 24px 48px ${features[0].color}20` : "0 4px 20px rgba(0,0,0,0.03)",
-            }}
-            initial={{ opacity: 0, scale: 0.96 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
-            whileHover={{ y: -6 }}>
-            <div className="absolute top-0 left-0 right-0 h-px transition-all duration-300"
-              style={{ background: hovered === 0 ? `linear-gradient(90deg,transparent,${features[0].color},transparent)` : "transparent" }} />
-            <motion.div className="text-6xl mb-6 drop-shadow-md"
-              animate={{ scale: hovered === 0 ? 1.15 : 1, rotate: hovered === 0 ? 8 : 0 }}
-              transition={{ duration: 0.3 }}>{features[0].icon}</motion.div>
-            <div className="inline-block text-xs font-bold px-3 py-1 rounded-full mb-3"
-              style={{ background: `${features[0].color}15`, color: features[0].color, border: `1px solid ${features[0].color}30` }}>
-              {features[0].badge}
-            </div>
-            <h3 className="text-2xl font-black text-gray-900 mb-3">{features[0].title}</h3>
-            <p className="text-gray-600 text-sm leading-relaxed">{features[0].desc}</p>
-            <p className="text-gray-500 text-sm mt-3 leading-relaxed">
-              Our proprietary AI model analyses 200+ data points from your profile, bank statements, and income in real-time — delivering a credit decision faster than any human reviewer ever could.
-            </p>
+        <motion.div layout className="mt-auto">
+          <motion.div layout className="inline-block text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-full mb-3"
+            style={{ background: `${f.color}10`, color: f.color }}>
+            {f.subtitle}
           </motion.div>
+          <motion.h3 layout className="text-xl md:text-2xl font-black text-white leading-tight">
+            {f.title}
+          </motion.h3>
 
-          {/* Remaining feature cards */}
-          {features.slice(1).map((f, i) => (
-            <motion.div
-              key={f.title}
-              onHoverStart={() => setHovered(i + 1)}
-              onHoverEnd={() => setHovered(null)}
-              className="rounded-2xl p-5 border transition-all duration-300 cursor-default backdrop-blur-md relative overflow-hidden"
-              style={{
-                background: hovered === i + 1 ? `linear-gradient(to bottom right, #ffffff, ${f.color}10)` : glass,
-                borderColor: hovered === i + 1 ? `${f.color}30` : "rgba(0,0,0,0.05)",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.02)",
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 + 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -5 }}>
-              <div className="absolute top-0 left-0 right-0 h-px transition-colors duration-300"
-                style={{ background: hovered === i + 1 ? `linear-gradient(90deg,transparent,${f.color},transparent)` : "transparent" }} />
-              <motion.div className="text-3xl mb-3 drop-shadow-sm"
-                animate={{ scale: hovered === i + 1 ? 1.15 : 1 }}>{f.icon}</motion.div>
-              <div className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mb-2"
-                style={{ background: `${f.color}15`, color: f.color, border: `1px solid ${f.color}22` }}>
-                {f.badge}
-              </div>
-              <h3 className="text-sm font-bold text-gray-900 mb-1.5">{f.title}</h3>
-              <p className="text-gray-600 text-xs leading-relaxed">{f.desc}</p>
-            </motion.div>
-          ))}
-        </div>
+          <AnimatePresence>
+            {isHovered && (
+              <motion.p
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                className="text-gray-400 text-sm leading-relaxed overflow-hidden"
+              >
+                {f.desc}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+    </motion.div>
+  )
+}
 
-        {/* CTA strip */}
+export default function FeaturesSection() {
+  const [hoveredTop, setHoveredTop] = useState<number | null>(0) // default select first card
+  const [hoveredBottom, setHoveredBottom] = useState<number | null>(null)
+
+  return (
+    <section id="features" className="py-24 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6">
         <motion.div
-          className="mt-5 rounded-2xl px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-5 relative overflow-hidden shadow-sm"
-          style={{
-            background: "linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(243,244,246,0.8) 100%)",
-            border: "1px solid #e5e7eb", backdropFilter: "blur(16px)",
-          }}
-          initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <div>
-            <h3 className="text-xl font-black text-gray-900">Apply in 2 minutes.{" "}
-              <span className="text-transparent bg-clip-text"
-                style={{ backgroundImage: "linear-gradient(90deg,#2563eb,#4f46e5)" }}>Get money today.</span>
-            </h3>
-            <p className="text-gray-500 text-sm mt-1 font-medium">Join 1 lakh+ Indians who trust QuaLoan.</p>
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-900/30 border border-purple-800/50 text-purple-300 text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
+            ✨ Next-Gen Features
           </div>
-          <div className="flex gap-3">
-            {["📱 iOS App", "🤖 Android"].map(app => (
-              <div key={app} className="bg-white border border-gray-200 text-gray-700 shadow-sm text-sm font-semibold px-5 py-2.5 rounded-xl cursor-pointer hover:bg-gray-50 hover:text-blue-600 transition-all">
-                {app}
-              </div>
+          <h2 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.1] mb-5">
+            Built for speed, trust, <br className="hidden md:block"/>
+            <span className="text-transparent bg-clip-text"
+              style={{ backgroundImage: "linear-gradient(135deg,#60a5fa,#a78bfa,#c084fc)" }}>
+              and your financial freedom.
+            </span>
+          </h2>
+          <p className="text-gray-400 text-lg font-medium">Built on transparency and trust</p>
+        </motion.div>
+
+        <div className="flex flex-col gap-4 h-[700px] md:h-[400px]">
+          {/* Top Row */}
+          <div className="flex-1 flex flex-col md:flex-row gap-4 h-1/2 w-full">
+            {features.slice(0, 4).map((f, i) => (
+              <FeatureCard
+                key={f.title}
+                f={f}
+                isHovered={hoveredTop === i}
+                handleHover={() => setHoveredTop(i)}
+                handleLeave={() => {}}
+              />
             ))}
           </div>
-        </motion.div>
+
+          {/* Bottom Row */}
+          <div className="flex-1 flex flex-col md:flex-row gap-4 h-1/2 w-full">
+            {features.slice(4, 7).map((f, i) => (
+              <FeatureCard
+                key={f.title}
+                f={f}
+                isHovered={hoveredBottom === i}
+                handleHover={() => setHoveredBottom(i)}
+                handleLeave={() => {}}
+              />
+            ))}
+          </div>
+        </div>
+
       </div>
     </section>
   )

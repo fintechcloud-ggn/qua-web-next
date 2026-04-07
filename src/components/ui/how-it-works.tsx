@@ -1,121 +1,146 @@
 "use client"
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { MonitorSmartphone, Cpu, ShieldCheck, Landmark, RefreshCw } from "lucide-react"
+import { useRef } from "react"
+import { motion, useScroll, useTransform } from "framer-motion"
+import { MonitorSmartphone, Cpu, ShieldCheck, Landmark, RefreshCw, CheckCircle2 } from "lucide-react"
 
 const steps = [
-  { num: "01", icon: <MonitorSmartphone className="w-1/2 h-1/2" />, title: "Fill Simple Form", desc: "Share your basic details, income, and pan card. Our 2-minute digital form requires absolutely zero physical paperwork.", time: "2 min", color: "#2563eb" }, // blue-600
-  { num: "02", icon: <Cpu className="w-1/2 h-1/2" />, title: "AI Credit Check", desc: "Our proprietary AI engine evaluates your profile instantly. No CIBIL score required — get your results in under 60 seconds.", time: "1 min", color: "#4f46e5" }, // indigo-600
-  { num: "03", icon: <ShieldCheck className="w-1/2 h-1/2" />, title: "Instant Approval", desc: "Review your personalized loan offer directly on screen. Accept with one tap and complete a secure digital e-sign.", time: "1 min", color: "#9333ea" }, // purple-600
-  { num: "04", icon: <Landmark className="w-1/2 h-1/2" />, title: "Money in Account", desc: "Funds are transferred via IMPS directly to your linked Indian bank account. Arrives in 5–30 minutes, 24/7.", time: "5 min", color: "#059669" }, // emerald-600
+  { num: "01", icon: <MonitorSmartphone className="w-8 h-8 md:w-10 md:h-10" />, title: "Fill Simple Form", desc: "Share your basic details. Our digital form requires absolutely zero paperwork.", time: "2 min", color: "#2563eb" },
+  { num: "02", icon: <Cpu className="w-8 h-8 md:w-10 md:h-10" />, title: "AI Credit Check", desc: "Our proprietary AI engine evaluates your profile instantly. No CIBIL required.", time: "< 60 sec", color: "#4f46e5" },
+  { num: "03", icon: <ShieldCheck className="w-8 h-8 md:w-10 md:h-10" />, title: "Instant Approval", desc: "Review your personalized loan offer and complete a secure digital e-sign.", time: "1 min", color: "#9333ea" },
+  { num: "04", icon: <Landmark className="w-8 h-8 md:w-10 md:h-10" />, title: "Money in Account", desc: "Funds transferred via IMPS directly to your bank account. Arrives instantly.", time: "5 min", color: "#059669" },
 ]
 
-export default function HowItWorks() {
-  const [active, setActive] = useState(0)
+// Subcomponent for the massive scaling icons to safely use hooks
+function StepIcon({ step, i, scrollYProgress }: { step: any, i: number, scrollYProgress: any }) {
+  const input = i === 0 ? [0, 0.33] : i === 3 ? [0.66, 1] : [(i-1)*0.33, i*0.33, (i+1)*0.33];
+  const output = i === 0 ? [1.2, 0.5] : i === 3 ? [0.5, 1.2] : [0.5, 1.2, 0.5];
+  const scale = useTransform(scrollYProgress, input, output);
 
   return (
-    <section id="how-it-works" className="py-24 relative">
-      <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-16 max-w-7xl mx-auto" />
+    <div className="w-full flex justify-center text-white drop-shadow-xl" style={{ color: step.color }}>
+      <motion.div style={{ scale }}>
+        {step.icon}
+      </motion.div>
+    </div>
+  )
+}
 
-      <div className="max-w-5xl mx-auto px-6">
-        <motion.div className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-600 text-xs font-bold uppercase tracking-widest mb-4 shadow-sm">
-            <RefreshCw className="w-3.5 h-3.5" /> Process
-          </div>
-          <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight mb-4">
-            Money in{" "}
-            <span className="text-transparent bg-clip-text"
-              style={{ backgroundImage: "linear-gradient(135deg,#2563eb,#4f46e5)" }}>
-              4 Simple Steps
-            </span>
-          </h2>
-          <p className="text-gray-500 font-medium text-lg">10 minutes total time. From start to cash.</p>
-        </motion.div>
+// Subcomponent for the details to safely use hooks
+function StepDetails({ step, i, scrollYProgress }: { step: any, i: number, scrollYProgress: any }) {
+  const center = i * 0.33; 
+  const inputOp = i === 0 ? [0, 0.2] : i === 3 ? [0.8, 1] : [center - 0.2, center, center + 0.2];
+  const outputOp = i === 0 ? [1, 0.3] : i === 3 ? [0.3, 1] : [0.3, 1, 0.3];
+  const inputScale = i === 0 ? [0, 0.2] : i === 3 ? [0.8, 1] : [center - 0.2, center, center + 0.2];
+  const outputScale = i === 0 ? [1.05, 0.95] : i === 3 ? [0.95, 1.05] : [0.95, 1.05, 0.95];
 
-        <div className="bg-white/60 border border-gray-200 rounded-3xl p-4 md:p-8 backdrop-blur-xl shadow-xl shadow-blue-900/5">
-          {/* Tabs / Stepper */}
-          <div className="relative flex justify-between items-center mb-12">
-            {/* Background Track */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full" />
+  const opacity = useTransform(scrollYProgress, inputOp, outputOp);
+  const scale = useTransform(scrollYProgress, inputScale, outputScale);
+  const borderColor = useTransform(scrollYProgress, (v: any) => typeof v === 'number' && v >= center - 0.05 ? step.color : "rgba(255,255,255,0.15)");
+
+  return (
+    <motion.div style={{ opacity, scale }} className="relative pl-16 md:pl-24">
+      <motion.div 
+        className="absolute -left-[5.25rem] md:-left-[4.75rem] top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border-[3px] flex items-center justify-center bg-black shadow-lg transition-colors duration-300"
+        style={{ borderColor }}
+      >
+         <CheckCircle2 className="w-5 h-5 transition-colors duration-300" style={{ color: step.color }} />
+      </motion.div>
+
+      <div className="bg-black/40 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-xl shadow-black/50">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-2xl font-black text-white tracking-tight">{step.title}</h3>
+          <span className="text-sm font-black hidden md:block" style={{ color: step.color }}>{step.time}</span>
+        </div>
+        <p className="text-gray-400 text-sm md:text-base leading-relaxed">{step.desc}</p>
+      </div>
+    </motion.div>
+  )
+}
+
+export default function HowItWorks() {
+  const containerRef = useRef(null)
+  
+  // Track scroll within this specific h-[400vh] container
+  const { scrollYProgress } = useScroll({ 
+    target: containerRef, 
+    offset: ["start start", "end end"] 
+  })
+
+  // We have 4 steps, split the 0-1 progress into 4 chunks
+  // 0.00-0.25: Step 1
+  // 0.25-0.50: Step 2
+  // 0.50-0.75: Step 3
+  // 0.75-1.00: Step 4
+
+  return (
+    <section id="how-it-works" ref={containerRef} className="relative h-[300vh] bg-transparent">
+      
+      {/* Sticky viewport that stays on screen while parsing the 400vh */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-center py-20">
+        
+        <div className="max-w-7xl mx-auto px-6 w-full">
+          <motion.div className="text-center mb-10 md:mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-900/30 border border-blue-800/50 text-blue-300 text-xs font-bold uppercase tracking-widest mb-4 shadow-sm">
+              <RefreshCw className="w-3.5 h-3.5" /> Fast Execution
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4 tracking-tight">
+              Money in{" "}
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(135deg,#60a5fa,#8b5cf6)" }}>
+                4 Simple Steps
+              </span>
+            </h2>
+            <p className="text-gray-400 font-medium text-lg">Scroll to execute timeline</p>
+          </motion.div>
+
+          <div className="flex flex-col md:flex-row gap-12 lg:gap-24 items-center">
             
-            {/* Active Progress Track */}
-            <motion.div 
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-1 rounded-full"
-              style={{ background: steps[active].color }}
-              initial={{ width: "0%" }}
-              animate={{ width: `${(active / (steps.length - 1)) * 100}%` }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-            />
+            {/* LEFT SIDE: Dynamic Big Graphic */}
+            <div className="hidden md:flex flex-1 justify-center relative">
+              {/* Massive glowing rings */}
+              <motion.div className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-40 mix-blend-multiply"
+                style={{
+                  background: useTransform(scrollYProgress, [0, 0.33, 0.66, 1], [steps[0].color, steps[1].color, steps[2].color, steps[3].color])
+                }}
+              />
+              <div className="relative w-64 h-64 lg:w-80 lg:h-80 bg-black/40 rounded-full shadow-2xl border-4 border-white/10 flex items-center justify-center overflow-hidden z-10 backdrop-blur-xl">
+                 <motion.div
+                   className="flex items-center gap-[200px]"
+                   // Move a giant track horizontally based on scroll
+                   style={{
+                     x: useTransform(scrollYProgress, [0, 1], ["0%", "-300%"]),
+                     width: "400%"
+                   }}
+                 >
+                    {steps.map((step, i) => (
+                       <StepIcon key={i} step={step} i={i} scrollYProgress={scrollYProgress} />
+                    ))}
+                 </motion.div>
+              </div>
+            </div>
 
-            {steps.map((step, i) => {
-              const isActive = i === active;
-              const isPast = i < active;
+            {/* RIGHT SIDE: Vertical text timeline connected directly to scroll */}
+            <div className="flex-1 w-full max-w-lg relative py-8">
               
-              return (
-                <div key={step.num} className="relative z-10 flex flex-col items-center">
-                  <motion.button
-                    onClick={() => setActive(i)}
-                    className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 cursor-pointer shadow-sm"
-                    style={{
-                      backgroundColor: isActive || isPast ? step.color : "#ffffff",
-                      border: `2px solid ${isActive || isPast ? step.color : "#e5e7eb"}`,
-                      color: isActive || isPast ? "#ffffff" : "#9ca3af"
-                    }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {isActive ? step.icon : step.num}
-                  </motion.button>
-                  <div className={`absolute top-14 w-32 text-center text-xs font-bold transition-colors duration-300 hidden md:block ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
-                    {step.title}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+              {/* Background static line */}
+              <div className="absolute left-6 md:left-8 top-0 bottom-0 w-1 bg-white/10 rounded-full" />
+              
+              {/* Foreground active line bound to scroll! */}
+              <motion.div 
+                className="absolute left-6 md:left-8 top-0 w-1 rounded-full origin-top"
+                style={{ 
+                  scaleY: scrollYProgress,
+                  background: useTransform(scrollYProgress, [0, 0.33, 0.66, 1], [steps[0].color, steps[1].color, steps[2].color, steps[3].color])
+                }}
+              />
 
-          <div className="md:h-12 hidden md:block" /> {/* Spacer for the absolute titles on desktop */}
+              <div className="flex flex-col gap-12 relative z-10">
+                {steps.map((step, i) => (
+                  <StepDetails key={step.num} step={step} i={i} scrollYProgress={scrollYProgress} />
+                ))}
+              </div>
 
-          {/* Expanded Content Area */}
-          <div className="bg-white rounded-2xl p-8 md:p-12 border border-gray-100 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1.5 h-full transition-colors duration-500" style={{ backgroundColor: steps[active].color }} />
-            
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col md:flex-row items-center gap-8 md:gap-12"
-              >
-                <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0 rounded-full flex items-center justify-center text-gray-700 shadow-inner border border-gray-50"
-                     style={{ background: `linear-gradient(135deg, #f8fafc, ${steps[active].color}15)`, color: steps[active].color }}>
-                  {steps[active].icon}
-                </div>
-                
-                <div className="flex-1 text-center md:text-left">
-                  <div className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4" 
-                       style={{ backgroundColor: `${steps[active].color}15`, color: steps[active].color }}>
-                    Step {steps[active].num}
-                  </div>
-                  <h3 className="text-2xl md:text-3xl font-black text-gray-900 mb-4 tracking-tight">
-                    {steps[active].title}
-                  </h3>
-                  <p className="text-gray-500 text-sm md:text-base leading-relaxed max-w-xl">
-                    {steps[active].desc}
-                  </p>
-                </div>
+            </div>
 
-                <div className="flex-shrink-0 md:text-right border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-8 mt-4 md:mt-0 w-full md:w-auto text-center">
-                  <div className="text-gray-400 font-bold text-xs uppercase tracking-widest mb-2">Time Estimate</div>
-                  <div className="text-4xl font-black" style={{ color: steps[active].color }}>
-                    {steps[active].time}
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
           </div>
         </div>
       </div>
