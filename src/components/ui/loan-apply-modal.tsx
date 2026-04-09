@@ -27,6 +27,7 @@ function DotMap() {
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
+    const context = ctx
 
     // Generate world-silhouette dots
     const dots: { x: number; y: number; op: number }[] = []
@@ -66,13 +67,13 @@ function DotMap() {
     let raf: number
 
     function draw() {
-      ctx.clearRect(0, 0, w, h)
+      context.clearRect(0, 0, w, h)
       // Draw dots
       dots.forEach(d => {
-        ctx.beginPath()
-        ctx.arc(d.x, d.y, 1, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(37, 99, 235, ${d.op})` // Blue dots
-        ctx.fill()
+        context.beginPath()
+        context.arc(d.x, d.y, 1, 0, Math.PI * 2)
+        context.fillStyle = `rgba(37, 99, 235, ${d.op})` // Blue dots
+        context.fill()
       })
       // Draw animated routes
       const t = (Date.now() - startTime) / 1000
@@ -83,26 +84,26 @@ function DotMap() {
         const cx = r.sx + (r.ex - r.sx) * progress
         const cy = r.sy + (r.ey - r.sy) * progress
         // Line
-        ctx.beginPath()
-        ctx.moveTo(r.sx, r.sy)
-        ctx.lineTo(cx, cy)
-        ctx.strokeStyle = "rgba(37, 99, 235, 0.4)"
-        ctx.lineWidth = 1.2
-        ctx.stroke()
+        context.beginPath()
+        context.moveTo(r.sx, r.sy)
+        context.lineTo(cx, cy)
+        context.strokeStyle = "rgba(37, 99, 235, 0.4)"
+        context.lineWidth = 1.2
+        context.stroke()
         // Start dot
-        ctx.beginPath()
-        ctx.arc(r.sx, r.sy, 3, 0, Math.PI * 2)
-        ctx.fillStyle = "#2563eb"
-        ctx.fill()
+        context.beginPath()
+        context.arc(r.sx, r.sy, 3, 0, Math.PI * 2)
+        context.fillStyle = "#2563eb"
+        context.fill()
         // Moving dot + glow
-        ctx.beginPath()
-        ctx.arc(cx, cy, 4, 0, Math.PI * 2)
-        ctx.fillStyle = "rgba(37, 99, 235, 0.3)"
-        ctx.fill()
-        ctx.beginPath()
-        ctx.arc(cx, cy, 2.5, 0, Math.PI * 2)
-        ctx.fillStyle = "#60a5fa"
-        ctx.fill()
+        context.beginPath()
+        context.arc(cx, cy, 4, 0, Math.PI * 2)
+        context.fillStyle = "rgba(37, 99, 235, 0.3)"
+        context.fill()
+        context.beginPath()
+        context.arc(cx, cy, 2.5, 0, Math.PI * 2)
+        context.fillStyle = "#60a5fa"
+        context.fill()
       })
       if (t > 14) startTime = Date.now()
       raf = requestAnimationFrame(draw)

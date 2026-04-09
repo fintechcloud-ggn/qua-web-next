@@ -264,30 +264,32 @@ export default function ShaderBackground() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const program = createShaderProgram(gl, vertexShaderSource, fsSource);
+    const glContext = gl;
+
+    const program = createShaderProgram(glContext, vertexShaderSource, fsSource);
     if (!program) {
       canvas.dataset.shaderStatus = "compile-failed";
       return;
     }
 
     canvas.dataset.shaderStatus = "ready";
-    gl.useProgram(program);
+    glContext.useProgram(program);
 
     const quadVertices = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
-    const vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
+    const vao = glContext.createVertexArray();
+    glContext.bindVertexArray(vao);
 
-    const vbo = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-    gl.bufferData(gl.ARRAY_BUFFER, quadVertices, gl.STATIC_DRAW);
+    const vbo = glContext.createBuffer();
+    glContext.bindBuffer(glContext.ARRAY_BUFFER, vbo);
+    glContext.bufferData(glContext.ARRAY_BUFFER, quadVertices, glContext.STATIC_DRAW);
 
-    const aPositionLoc = gl.getAttribLocation(program, "aPosition");
-    gl.enableVertexAttribArray(aPositionLoc);
-    gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 0, 0);
+    const aPositionLoc = glContext.getAttribLocation(program, "aPosition");
+    glContext.enableVertexAttribArray(aPositionLoc);
+    glContext.vertexAttribPointer(aPositionLoc, 2, glContext.FLOAT, false, 0, 0);
 
-    const uResolutionLoc = gl.getUniformLocation(program, "uResolution");
-    const uTimeLoc = gl.getUniformLocation(program, "uTime");
-    const uMouseLoc = gl.getUniformLocation(program, "uMouse");
+    const uResolutionLoc = glContext.getUniformLocation(program, "uResolution");
+    const uTimeLoc = glContext.getUniformLocation(program, "uTime");
+    const uMouseLoc = glContext.getUniformLocation(program, "uMouse");
 
     const startTime = performance.now();
     let mouseX = window.innerWidth / 2;
@@ -314,18 +316,18 @@ export default function ShaderBackground() {
         canvas.height = window.innerHeight;
       }
 
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.clear(gl.COLOR_BUFFER_BIT);
+      glContext.viewport(0, 0, canvas.width, canvas.height);
+      glContext.clear(glContext.COLOR_BUFFER_BIT);
 
-      gl.useProgram(program);
-      gl.bindVertexArray(vao);
-      gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
-      gl.uniform1f(uTimeLoc, elapsed);
+      glContext.useProgram(program);
+      glContext.bindVertexArray(vao);
+      glContext.uniform2f(uResolutionLoc, canvas.width, canvas.height);
+      glContext.uniform1f(uTimeLoc, elapsed);
       if (uMouseLoc) {
-        gl.uniform2f(uMouseLoc, mouseX, mouseY);
+        glContext.uniform2f(uMouseLoc, mouseX, mouseY);
       }
 
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      glContext.drawArrays(glContext.TRIANGLES, 0, 6);
       requestAnimationFrame(render);
     }
 
@@ -333,7 +335,7 @@ export default function ShaderBackground() {
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
+      glContext.viewport(0, 0, canvas.width, canvas.height);
     };
     window.addEventListener("resize", handleResize);
 
@@ -341,11 +343,9 @@ export default function ShaderBackground() {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);
-      if (gl) {
-        gl.deleteProgram(program);
-        gl.deleteBuffer(vbo);
-        gl.deleteVertexArray(vao!);
-      }
+      glContext.deleteProgram(program);
+      glContext.deleteBuffer(vbo);
+      glContext.deleteVertexArray(vao!);
     };
   }, []);
 
