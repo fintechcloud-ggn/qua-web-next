@@ -43,11 +43,11 @@ const DockTextButton = React.forwardRef<HTMLButtonElement, DockTextButtonProps>(
         className={cn(
           "relative group px-4 md:px-5 py-2.5 rounded-xl font-bold text-sm transition-colors cursor-pointer",
           isHighlight 
-            ? "text-white shadow-lg shadow-blue-500/30" 
-            : "text-slate-600 hover:bg-slate-100/50 hover:text-slate-900",
+            ? "text-white shadow-lg shadow-orange-500/30" 
+            : "text-slate-700 hover:bg-orange-50 hover:text-slate-950",
           className
         )}
-        style={isHighlight ? { background: "linear-gradient(135deg,#3b82f6,#4f46e5)" } : undefined}
+        style={isHighlight ? { background: "linear-gradient(135deg,#ff8a00,#f97316)" } : undefined}
       >
         {label}
       </motion.button>
@@ -66,9 +66,9 @@ const Dock = React.forwardRef<HTMLDivElement, DockProps>(
           variants={floatingAnimation}
           className={cn(
             "flex items-center gap-1 md:gap-2 p-2 rounded-2xl md:rounded-full",
-            "backdrop-blur-xl border border-white/40 shadow-[0_20px_40px_rgba(0,0,0,0.08)]",
-            "bg-white/85",
-            "hover:shadow-[0_25px_50px_rgba(0,0,0,0.12)] transition-shadow duration-500 pointer-events-auto"
+            "backdrop-blur-xl border border-orange-200/70 shadow-[0_20px_40px_rgba(120,53,15,0.08)]",
+            "bg-white/75",
+            "hover:shadow-[0_25px_50px_rgba(120,53,15,0.12)] transition-shadow duration-500 pointer-events-auto"
           )}
         >
           

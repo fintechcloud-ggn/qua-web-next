@@ -29,33 +29,36 @@ const NOISE_SWIRL_FACTOR = 0.2;
 // Number of fractal noise octaves in fbm (must be integer).
 const FBM_OCTAVES = 10;
 
-// 20-step palette of Midnight Violet & Indigo.
-const violetColors = [
-  [0.05, 0.02, 0.10], // Deepest dark purple
-  [0.08, 0.03, 0.15],
-  [0.10, 0.04, 0.20],
-  [0.12, 0.05, 0.25],
-  [0.15, 0.06, 0.30],
-  [0.20, 0.08, 0.40],
-  [0.25, 0.10, 0.50],
-  [0.30, 0.12, 0.60],
-  [0.35, 0.15, 0.70],
-  [0.40, 0.20, 0.80],
-  [0.50, 0.30, 0.90],
-  [0.60, 0.40, 0.95],
-  [0.70, 0.50, 0.98],
-  [0.80, 0.60, 1.00],
-  [0.85, 0.70, 1.00],
-  [0.90, 0.80, 1.00],
-  [0.92, 0.85, 1.00],
-  [0.95, 0.90, 1.00],
-  [0.98, 0.95, 1.00],
-  [1.00, 1.00, 1.00] 
+const ORANGE_START = [1.0, 0.54, 0.0]; // #ff8a00
+const ORANGE_END = [0.97, 0.45, 0.09]; // #f97316
+
+// 20-step palette based on the login/signup orange button.
+const orangeColors = [
+  [1.00, 0.90, 0.68],
+  [1.00, 0.85, 0.58],
+  [1.00, 0.80, 0.50],
+  [1.00, 0.76, 0.43],
+  [1.00, 0.72, 0.37],
+  [1.00, 0.69, 0.31],
+  [1.00, 0.66, 0.25],
+  [1.00, 0.63, 0.19],
+  [1.00, 0.60, 0.14],
+  [1.00, 0.57, 0.09],
+  [1.00, 0.54, 0.04],
+  [0.99, 0.52, 0.03],
+  [0.99, 0.50, 0.05],
+  [0.98, 0.48, 0.06],
+  [0.98, 0.47, 0.07],
+  [0.98, 0.46, 0.08],
+  [0.97, 0.45, 0.09],
+  [0.98, 0.61, 0.20],
+  [0.99, 0.73, 0.39],
+  [1.00, 0.92, 0.76]
 ];
 
 function buildFragmentShader(): string {
   const fbmOctavesInt = Math.floor(FBM_OCTAVES);
-  const colorArraySrc = violetColors.map((c) => `vec3(${c[0]}, ${c[1]}, ${c[2]})`).join(",\n  ");
+  const colorArraySrc = orangeColors.map((c) => `vec3(${c[0]}, ${c[1]}, ${c[2]})`).join(",\n  ");
 
   return `#version 300 es
 
@@ -68,7 +71,7 @@ uniform vec2 uMouse;
 
 #define NUM_COLORS 20
 
-vec3 violetColors[NUM_COLORS] = vec3[](
+vec3 orangeColors[NUM_COLORS] = vec3[](
   ${colorArraySrc}
 );
 
@@ -177,12 +180,16 @@ void main() {
   int iHigh = int(min(float(iLow + 1), float(NUM_COLORS - 1)));
   float f = fract(idx);
 
-  vec3 colLow = violetColors[iLow];
-  vec3 colHigh = violetColors[iHigh];
+  vec3 colLow = orangeColors[iLow];
+  vec3 colHigh = orangeColors[iHigh];
   vec3 color = mix(colLow, colHigh, f);
 
-  // Add the interactive mouse glow over the calculated color (Neon Violet glow)
-  color += vec3(0.6, 0.2, 1.0) * mouseGlow;
+  // Add the interactive mouse glow using the same orange family as the CTA button.
+  color += mix(
+    vec3(${ORANGE_START[0]}, ${ORANGE_START[1]}, ${ORANGE_START[2]}),
+    vec3(${ORANGE_END[0]}, ${ORANGE_END[1]}, ${ORANGE_END[2]}),
+    0.5
+  ) * mouseGlow;
 
   // Use full opacity everywhere (no transparent dark regions)
   outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
@@ -356,7 +363,7 @@ export default function ShaderBackground() {
         className="absolute inset-0 h-full w-full"
         style={{
           background:
-            "radial-gradient(circle at 20% 20%, rgba(15,2,30,0.5), transparent 35%), linear-gradient(180deg, #05020a 0%, #1e1b4b 45%, #05020a 100%)",
+            "radial-gradient(circle at 20% 20%, rgba(255,244,220,0.55), transparent 35%), linear-gradient(135deg, #ff8a00 0%, #f97316 100%)",
         }}
       />
     </div>

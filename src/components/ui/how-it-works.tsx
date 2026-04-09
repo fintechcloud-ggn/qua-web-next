@@ -40,25 +40,25 @@ export default function HowItWorks() {
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
         >
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-white/45">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-[#a76a2a]">
             How It Works
           </p>
-          <h2 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
+          <h2 className="text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">
             Money in 4 simple steps
           </h2>
-          <p className="mt-4 text-base leading-7 text-white/60">
+          <p className="mt-4 text-base leading-7 text-[#6f4317]">
             A fast digital flow designed to move from application to disbursal in minutes.
           </p>
         </motion.div>
 
         <div className="relative pl-6 md:pl-8">
-          <div className="absolute left-0 top-0 h-full w-px bg-white/10" />
+          <div className="absolute left-0 top-0 h-full w-px bg-orange-200/70" />
 
           <div className="space-y-5">
             {steps.map((step, index) => (
               <motion.article
                 key={step.num}
-                className="relative rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
+                className="relative rounded-3xl border border-orange-200/70 bg-white/75 p-6 backdrop-blur-sm"
                 initial={{ opacity: 0, y: 28 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -68,21 +68,21 @@ export default function HowItWorks() {
                   ease: [0.16, 1, 0.3, 1],
                 }}
               >
-                <div className="absolute -left-[31px] top-7 h-3 w-3 rounded-full border border-white/20 bg-white" />
+                <div className="absolute -left-[31px] top-7 h-3 w-3 rounded-full border border-orange-200 bg-orange-400" />
 
                 <div className="mb-4 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-white/40">{step.num}</span>
-                    <h3 className="text-xl font-semibold text-white md:text-2xl">
+                    <span className="text-sm font-medium text-[#a76a2a]">{step.num}</span>
+                    <h3 className="text-xl font-semibold text-slate-950 md:text-2xl">
                       {step.title}
                     </h3>
                   </div>
-                  <span className="shrink-0 rounded-full border border-white/10 px-3 py-1 text-xs font-medium text-white/60">
+                  <span className="shrink-0 rounded-full border border-orange-200 px-3 py-1 text-xs font-medium text-[#8a5a24]">
                     {step.time}
                   </span>
                 </div>
 
-                <p className="max-w-2xl text-sm leading-7 text-white/60 md:text-base">
+                <p className="max-w-2xl text-sm leading-7 text-[#6f4317] md:text-base">
                   {step.desc}
                 </p>
               </motion.article>

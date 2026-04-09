@@ -1,7 +1,7 @@
 "use client"
 import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Zap, Shield, BarChart, CreditCard, Smartphone, Rocket, Trophy, Headphones } from "lucide-react"
+import { Zap, Shield, BarChart, CreditCard, Smartphone, Rocket, Headphones } from "lucide-react"
 
 const features = [
   {
@@ -75,8 +75,8 @@ function FeatureCard({ f, isHovered, handleHover, handleLeave }: any) {
       layout
       className="relative rounded-3xl overflow-hidden cursor-pointer flex flex-col justify-end p-6 border transition-all"
       style={{
-        border: isHovered ? `1px solid ${f.color}70` : "1px solid rgba(255,255,255,0.05)",
-        background: "rgba(0,0,0,0.4)",
+        border: isHovered ? `1px solid ${f.color}70` : "1px solid rgba(251,146,60,0.14)",
+        background: "rgba(255,251,247,0.78)",
         backdropFilter: "blur(20px)",
       }}
       animate={{
@@ -110,7 +110,7 @@ function FeatureCard({ f, isHovered, handleHover, handleLeave }: any) {
             style={{ background: `${f.color}10`, color: f.color }}>
             {f.subtitle}
           </motion.div>
-          <motion.h3 layout className="text-xl md:text-2xl font-black text-white leading-tight">
+          <motion.h3 layout className="text-xl md:text-2xl font-black text-slate-950 leading-tight">
             {f.title}
           </motion.h3>
 
@@ -120,7 +120,7 @@ function FeatureCard({ f, isHovered, handleHover, handleLeave }: any) {
                 initial={{ opacity: 0, height: 0, marginTop: 0 }}
                 animate={{ opacity: 1, height: "auto", marginTop: 12 }}
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                className="text-gray-400 text-sm leading-relaxed overflow-hidden"
+                className="text-[#6f4317] text-sm leading-relaxed overflow-hidden"
               >
                 {f.desc}
               </motion.p>
@@ -145,17 +145,17 @@ export default function FeaturesSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-900/30 border border-purple-800/50 text-purple-300 text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-bold uppercase tracking-widest mb-6 shadow-sm">
             ✨ Next-Gen Features
           </div>
-          <h2 className="text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.1] mb-5">
+          <h2 className="text-5xl md:text-6xl font-black text-slate-950 tracking-tight leading-[1.1] mb-5">
             Built for speed, trust, <br className="hidden md:block"/>
             <span className="text-transparent bg-clip-text"
-              style={{ backgroundImage: "linear-gradient(135deg,#60a5fa,#a78bfa,#c084fc)" }}>
+              style={{ backgroundImage: "linear-gradient(135deg,#ff8a00,#f97316,#fb923c)" }}>
               and your financial freedom.
             </span>
           </h2>
-          <p className="text-gray-400 text-lg font-medium">Built on transparency and trust</p>
+          <p className="text-[#6f4317] text-lg font-medium">Built on transparency and trust</p>
         </motion.div>
 
         <div className="flex flex-col gap-4 h-[700px] md:h-[400px]">

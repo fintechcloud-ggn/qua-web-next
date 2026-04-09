@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight } from "lucide-react"
+import BrandLogo from "@/components/ui/brand-logo"
 
 // ─── Dot Map (adapted for light background) ───────────────────────────────────
 function DotMap() {
@@ -223,9 +224,7 @@ export default function LoanApplyModal({ onClose, onSuccess }: { onClose: () => 
             {/* Logo */}
             <motion.div className="flex items-center gap-2"
               initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm text-white shadow-md shadow-blue-200/50"
-                style={{ background: "linear-gradient(135deg,#3b82f6,#4f46e5)" }}>Q</div>
-              <span className="font-bold text-lg tracking-tight">QuaLoan</span>
+              <BrandLogo compact />
             </motion.div>
 
             {/* Center content */}
