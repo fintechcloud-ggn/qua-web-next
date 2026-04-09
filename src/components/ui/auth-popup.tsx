@@ -3,9 +3,10 @@
 import { startTransition, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
-import { ArrowRight, ShieldCheck, Sparkles, UserRound, X } from "lucide-react"
+import { ArrowRight, ShieldCheck, Sparkles, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import BrandLogo from "@/components/ui/brand-logo"
 
 type AuthMode = "signin" | "signup"
 
@@ -83,7 +84,7 @@ export default function AuthPopup({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[220] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xl"
+          className="fixed inset-0 z-[220] flex items-center justify-center bg-[#2a1708]/65 p-4 backdrop-blur-xl"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -94,23 +95,23 @@ export default function AuthPopup({
           }}
         >
           <motion.div
-            className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/15 bg-[#08111f] shadow-[0_40px_160px_rgba(2,8,23,0.55)] lg:grid-cols-[1.05fr_0.95fr]"
+            className="grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-orange-200/70 bg-[#fff8f1] shadow-[0_40px_160px_rgba(120,53,15,0.24)] lg:grid-cols-[1.05fr_0.95fr]"
             initial={{ opacity: 0, y: 28, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 240, damping: 24 }}
           >
-            <div className="relative overflow-hidden border-b border-white/10 p-6 text-white lg:border-b-0 lg:border-r lg:p-9">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(14,165,233,0.3),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.34),transparent_24%),linear-gradient(160deg,rgba(3,7,18,0.35),rgba(2,6,23,0.9))]" />
+            <div className="relative overflow-hidden border-b border-orange-200/70 p-6 text-slate-950 lg:border-b-0 lg:border-r lg:p-9">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(255,138,0,0.28),transparent_30%),radial-gradient(circle_at_80%_20%,rgba(249,115,22,0.32),transparent_24%),linear-gradient(160deg,rgba(255,250,245,0.96),rgba(255,241,225,0.92))]" />
               <div className="relative z-10">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-sky-300/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.28em] text-sky-100">
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/70 px-4 py-2 text-xs font-bold uppercase tracking-[0.28em] text-orange-700">
                   <Sparkles className="size-3.5" />
                   Borrower Access
                 </div>
                 <h2 className="max-w-md text-4xl font-black leading-tight tracking-tight">
                   Step in, shape your loan, and get disbursal moving.
                 </h2>
-                <p className="mt-4 max-w-md text-sm leading-6 text-slate-200/80">
+                <p className="mt-4 max-w-md text-sm leading-6 text-[#6f4317]">
                   Sign in through a focused popup and land directly in a proper loan dashboard with offer controls,
                   account setup, repayment view, and application activity.
                 </p>
@@ -123,48 +124,48 @@ export default function AuthPopup({
                   ].map((item, index) => (
                     <motion.div
                       key={item.label}
-                      className="rounded-[1.5rem] border border-white/10 bg-white/8 p-4"
+                      className="rounded-[1.5rem] border border-orange-100 bg-white/80 p-4"
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.08 * index }}
                     >
-                      <div className="text-xs uppercase tracking-[0.24em] text-slate-300">{item.label}</div>
-                      <div className="mt-2 text-2xl font-black">{item.value}</div>
+                      <div className="text-xs uppercase tracking-[0.24em] text-[#8a5a24]">{item.label}</div>
+                      <div className="mt-2 text-2xl font-black text-slate-950">{item.value}</div>
                     </motion.div>
                   ))}
                 </div>
 
-                <div className="mt-8 rounded-[1.8rem] border border-white/10 bg-white/8 p-5">
-                  <div className="text-xs font-bold uppercase tracking-[0.24em] text-sky-100">Demo credentials</div>
-                  <div className="mt-4 grid gap-3 text-sm text-slate-200">
-                    <div className="flex items-center justify-between rounded-2xl bg-slate-950/35 px-4 py-3">
+                <div className="mt-8 rounded-[1.8rem] border border-orange-100 bg-white/80 p-5">
+                  <div className="text-xs font-bold uppercase tracking-[0.24em] text-orange-700">Demo credentials</div>
+                  <div className="mt-4 grid gap-3 text-sm text-[#6f4317]">
+                    <div className="flex items-center justify-between rounded-2xl bg-orange-50 px-4 py-3">
                       <span>Mobile</span>
-                      <span className="font-semibold text-white">{form.mobile}</span>
+                      <span className="font-semibold text-slate-950">{form.mobile}</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl bg-slate-950/35 px-4 py-3">
+                    <div className="flex items-center justify-between rounded-2xl bg-orange-50 px-4 py-3">
                       <span>Email</span>
-                      <span className="font-semibold text-white">{form.email}</span>
+                      <span className="font-semibold text-slate-950">{form.email}</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-2xl bg-slate-950/35 px-4 py-3">
+                    <div className="flex items-center justify-between rounded-2xl bg-orange-50 px-4 py-3">
                       <span>Password / OTP</span>
-                      <span className="font-semibold text-white">{form.password}</span>
+                      <span className="font-semibold text-slate-950">{form.password}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="relative bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] p-6 lg:p-9">
+            <div className="relative bg-[linear-gradient(180deg,#fffaf5,#fff1df)] p-6 lg:p-9">
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute right-5 top-5 flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-950"
+                className="absolute right-5 top-5 flex size-10 items-center justify-center rounded-full border border-orange-200 bg-white text-[#8a5a24] transition hover:text-slate-950"
                 aria-label="Close login dialog"
               >
                 <X className="size-4" />
               </button>
 
-              <div className="flex rounded-full border border-slate-200 bg-slate-100 p-1">
+              <div className="flex rounded-full border border-orange-200 bg-orange-50 p-1">
                 {[
                   { id: "signin", label: "Sign In" },
                   { id: "signup", label: "Sign Up" },
@@ -174,7 +175,7 @@ export default function AuthPopup({
                     type="button"
                     onClick={() => setMode(item.id as AuthMode)}
                     className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition ${
-                      mode === item.id ? "bg-slate-950 text-white shadow-lg" : "text-slate-500"
+                      mode === item.id ? "bg-[#f97316] text-white shadow-lg shadow-orange-500/20" : "text-[#8a5a24]"
                     }`}
                   >
                     {item.label}
@@ -191,12 +192,10 @@ export default function AuthPopup({
                   exit={{ opacity: 0, x: -18 }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex size-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
-                      <UserRound className="size-5" />
-                    </div>
+                    <BrandLogo compact className="scale-[0.62] origin-left" />
                     <div>
                       <div className="text-2xl font-black text-slate-950">{title}</div>
-                      <div className="text-sm text-slate-500">
+                      <div className="text-sm text-[#6f4317]">
                         {mode === "signin" ? "Continue to the live borrower dashboard." : "Open a new borrower workspace in seconds."}
                       </div>
                     </div>
@@ -204,58 +203,58 @@ export default function AuthPopup({
 
                   <div className="mt-7 grid gap-4">
                     {mode === "signup" && (
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
+                      <label className="grid gap-2 text-sm font-medium text-[#6f4317]">
                         Full name
                         <input
                           value={form.name}
                           onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-300"
+                          className="rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none transition focus:border-orange-300"
                         />
                       </label>
                     )}
 
-                    <label className="grid gap-2 text-sm font-medium text-slate-700">
+                    <label className="grid gap-2 text-sm font-medium text-[#6f4317]">
                       Mobile number
                       <input
                         value={form.mobile}
                         onChange={(event) => setForm((current) => ({ ...current, mobile: event.target.value }))}
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-300"
+                        className="rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none transition focus:border-orange-300"
                       />
                     </label>
 
-                    <label className="grid gap-2 text-sm font-medium text-slate-700">
+                    <label className="grid gap-2 text-sm font-medium text-[#6f4317]">
                       Email address
                       <input
                         value={form.email}
                         onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-300"
+                        className="rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none transition focus:border-orange-300"
                       />
                     </label>
 
                     {mode === "signup" && (
-                      <label className="grid gap-2 text-sm font-medium text-slate-700">
+                      <label className="grid gap-2 text-sm font-medium text-[#6f4317]">
                         City
                         <input
                           value={form.city}
                           onChange={(event) => setForm((current) => ({ ...current, city: event.target.value }))}
-                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-300"
+                          className="rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none transition focus:border-orange-300"
                         />
                       </label>
                     )}
 
-                    <label className="grid gap-2 text-sm font-medium text-slate-700">
+                    <label className="grid gap-2 text-sm font-medium text-[#6f4317]">
                       Password / OTP
                       <input
                         type="password"
                         value={form.password}
                         onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-sky-300"
+                        className="rounded-2xl border border-orange-200 bg-white px-4 py-3 outline-none transition focus:border-orange-300"
                       />
                     </label>
                   </div>
 
-                  <div className="mt-7 rounded-[1.5rem] border border-emerald-100 bg-emerald-50 px-4 py-4 text-sm text-slate-600">
-                    <div className="flex items-center gap-2 font-semibold text-emerald-700">
+                  <div className="mt-7 rounded-[1.5rem] border border-orange-100 bg-orange-50 px-4 py-4 text-sm text-[#6f4317]">
+                    <div className="flex items-center gap-2 font-semibold text-orange-700">
                       <ShieldCheck className="size-4" />
                       Post-login flow
                     </div>
@@ -275,7 +274,7 @@ export default function AuthPopup({
                     type="button"
                     onClick={handleContinue}
                     disabled={loading}
-                    className="mt-7 h-13 w-full rounded-full bg-slate-950 text-base font-bold text-white hover:bg-slate-800"
+                    className="mt-7 h-13 w-full rounded-full bg-gradient-to-r from-[#ff8a00] to-[#f97316] text-base font-bold text-white shadow-lg shadow-orange-500/20 hover:from-[#ff9800] hover:to-[#fb923c]"
                   >
                     {loading ? "Opening dashboard..." : mode === "signin" ? "Login to Dashboard" : "Create Account"}
                     <ArrowRight className="size-4" />
