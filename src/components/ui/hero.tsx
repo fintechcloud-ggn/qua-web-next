@@ -61,9 +61,14 @@ export default function HeroSection({ onApplyClick }: { onApplyClick: () => void
   const springY = useSpring(rotateY, { stiffness: 120, damping: 20 })
 
   useEffect(() => {
-    setMounted(true)
+    const frame = window.requestAnimationFrame(() => {
+      setMounted(true)
+    })
     const id = setInterval(() => setWordIdx(i => (i + 1) % cycleWords.length), 2400)
-    return () => clearInterval(id)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      clearInterval(id)
+    }
   }, [])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {

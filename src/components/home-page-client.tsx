@@ -91,31 +91,47 @@ export default function HomePageClient({ shouldOpenAuth }: { shouldOpenAuth: boo
   return (
     <main className="relative min-h-screen">
       <ShaderBackground />
+      <GuideCharacter onApplyClick={handleApplyClick} />
 
       <div className="relative z-10">
         <Navbar onApplyClick={handleApplyClick} />
-        <HeroSection onApplyClick={handleApplyClick} />
+        <div id="hero">
+          <HeroSection onApplyClick={handleApplyClick} />
+        </div>
         <FadeIn delay={0.1}>
-          <StatsSection />
+          <div id="stats">
+            <StatsSection />
+          </div>
         </FadeIn>
         <FadeIn delay={0.1}>
-          <LoanCalculator onApplyClick={handleApplyClick} />
+          <div id="calculator">
+            <LoanCalculator onApplyClick={handleApplyClick} />
+          </div>
         </FadeIn>
         <FadeIn delay={0.1}>
-          <HowItWorks />
+          <div id="how-it-works">
+            <HowItWorks />
+          </div>
         </FadeIn>
         <FadeIn delay={0.1}>
           <FeaturesSection />
         </FadeIn>
         <FadeIn delay={0.1}>
-          <TestimonialsSection />
+          <div id="testimonials">
+            <TestimonialsSection />
+          </div>
         </FadeIn>
         <FadeIn delay={0.1}>
-          <FAQSection />
+          <div id="faq">
+            <FAQSection />
+          </div>
         </FadeIn>
         <FadeIn delay={0.1}>
-          <CtaSection onApplyClick={handleApplyClick} />
+          <div id="cta">
+            <CtaSection onApplyClick={handleApplyClick} />
+          </div>
         </FadeIn>
+
         <Footer />
       </div>
       <AuthPopup open={showAuthPopup} onClose={() => setShowAuthPopup(false)} onAuthSuccess={setSessionUser} />

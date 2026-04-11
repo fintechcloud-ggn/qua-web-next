@@ -77,26 +77,26 @@ export default function FAQSection() {
           </p>
 
           {/* Fraud Block */}
-          <div className="bg-black/40 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] relative overflow-hidden">
+          <div className="bg-[linear-gradient(180deg,rgba(255,251,247,0.96),rgba(255,242,227,0.92))] backdrop-blur-md rounded-3xl p-8 border border-orange-200/70 shadow-[0_20px_40px_rgba(120,53,15,0.10)] relative overflow-hidden">
              {/* decorative background shield */}
-             <ShieldAlert className="absolute -right-8 -bottom-8 w-48 h-48 text-red-900/40" />
+             <ShieldAlert className="absolute -right-8 -bottom-8 w-48 h-48 text-orange-200/80" />
              
              <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-4">
-                   <div className="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center">
+                   <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center">
                       <Fingerprint className="w-5 h-5" />
                    </div>
-                   <h3 className="text-xl font-bold text-white">Fraud Awareness</h3>
+                   <h3 className="text-xl font-bold text-slate-950">Fraud Awareness</h3>
                 </div>
                 <div className="space-y-4">
-                   <p className="text-gray-400 text-sm leading-relaxed">
-                      Stay vigilant against financial fraud. We will <b className="text-gray-200">never</b> ask you to pay advanced fees for loan processing or ask for your confidential OTP / passwords over a phone call.
+                   <p className="text-[#6f4317] text-sm leading-relaxed">
+                      Stay vigilant against financial fraud. We will <b className="text-slate-950">never</b> ask you to pay advance fees for loan processing or ask for your confidential OTP / passwords over a phone call.
                    </p>
-                   <div className="flex items-start gap-2 text-sm text-gray-400">
+                   <div className="flex items-start gap-2 text-sm text-[#6f4317]">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                      <span>Official partner of <b className="text-gray-200">Naman Finlease Pvt. Ltd.</b>, an RBI Registered NBFC.</span>
+                      <span>Official partner of <b className="text-slate-950">Naman Finlease Pvt. Ltd.</b>, an RBI Registered NBFC.</span>
                    </div>
-                   <div className="flex items-start gap-2 text-sm text-gray-400">
+                   <div className="flex items-start gap-2 text-sm text-[#6f4317]">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
                       <span>Never click on unknown or suspicious links claiming to be QuaLoan.</span>
                    </div>
@@ -113,8 +113,8 @@ export default function FAQSection() {
            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
         >
           <div className="mb-8">
-             <h2 className="text-3xl font-black text-white mb-2">Frequently Asked Questions</h2>
-             <p className="text-gray-400">Everything you need to know about getting a loan with QUA.</p>
+             <h2 className="text-3xl font-black text-slate-950 mb-2">Frequently Asked Questions</h2>
+             <p className="text-[#6f4317]">Everything you need to know about getting a loan with QUA.</p>
           </div>
 
           <div className="space-y-4">
@@ -129,12 +129,12 @@ export default function FAQSection() {
              ))}
           </div>
 
-          <div className="mt-8 p-6 bg-blue-900/30 border border-blue-800/50 backdrop-blur-sm rounded-2xl flex items-center justify-between">
+          <div className="mt-8 p-6 bg-orange-50 border border-orange-200 backdrop-blur-sm rounded-2xl flex items-center justify-between">
              <div>
-                <h4 className="text-white font-bold mb-1">Still have questions?</h4>
-                <p className="text-gray-400 text-sm">Our support team is here 24/7.</p>
+                <h4 className="text-slate-950 font-bold mb-1">Still have questions?</h4>
+                <p className="text-[#6f4317] text-sm">Our support team is here 24/7.</p>
              </div>
-             <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-colors">
+             <button className="px-5 py-2.5 bg-gradient-to-r from-[#ff8a00] to-[#f97316] hover:from-[#ff9800] hover:to-[#fb923c] text-white font-bold text-sm rounded-xl transition-colors">
                 Contact Us
              </button>
           </div>
