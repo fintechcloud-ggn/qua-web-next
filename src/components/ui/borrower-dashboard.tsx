@@ -17,6 +17,7 @@ import {
   Menu,
   PencilLine,
   PiggyBank,
+  Search,
   SlidersHorizontal,
   Sparkles,
   TrendingUp,
@@ -24,6 +25,7 @@ import {
   X,
 } from "lucide-react"
 
+import { BackgroundPaths } from "@/components/ui/background-paths"
 import { Button } from "@/components/ui/button"
 
 type PageId = "overview" | "application" | "offer-studio" | "disbursal" | "repayment-plan" | "profile"
@@ -101,32 +103,32 @@ const accentStyles: Record<
   }
 > = {
   sky: {
-    wash: "from-sky-100 via-cyan-50 to-white",
-    chip: "bg-sky-100 text-sky-700 border-sky-200",
-    icon: "bg-sky-100 text-sky-700",
-    panel: "bg-sky-50",
-    progress: "from-sky-400 to-cyan-400",
+    wash: "from-[#fffaf5] via-[#fffefe] to-[#f5f7ff]",
+    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
+    icon: "bg-[#f6ede3] text-[#7a5c42]",
+    panel: "bg-[#faf4ed]",
+    progress: "from-[#f6b26b] to-[#d98a5e]",
   },
   mint: {
-    wash: "from-emerald-100 via-teal-50 to-white",
-    chip: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    icon: "bg-emerald-100 text-emerald-700",
-    panel: "bg-emerald-50",
-    progress: "from-emerald-400 to-teal-400",
+    wash: "from-[#f8f1e8] via-[#fffefe] to-[#f6fbf8]",
+    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
+    icon: "bg-[#f1e6db] text-[#7a5c42]",
+    panel: "bg-[#faf4ed]",
+    progress: "from-[#f4c489] to-[#ce9f73]",
   },
   peach: {
-    wash: "from-amber-100 via-orange-50 to-white",
-    chip: "bg-amber-100 text-amber-700 border-amber-200",
-    icon: "bg-amber-100 text-amber-700",
-    panel: "bg-orange-50",
-    progress: "from-amber-400 to-orange-400",
+    wash: "from-[#fff8ef] via-[#fffdfa] to-[#fff4ea]",
+    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
+    icon: "bg-[#f8e8d7] text-[#855d35]",
+    panel: "bg-[#fbf2e7]",
+    progress: "from-[#f5bf7a] to-[#e18f57]",
   },
   violet: {
-    wash: "from-violet-100 via-fuchsia-50 to-white",
-    chip: "bg-violet-100 text-violet-700 border-violet-200",
-    icon: "bg-violet-100 text-violet-700",
-    panel: "bg-violet-50",
-    progress: "from-violet-400 to-fuchsia-400",
+    wash: "from-[#fff9f2] via-[#fffefe] to-[#f9f4ef]",
+    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
+    icon: "bg-[#f7ece1] text-[#7b5b43]",
+    panel: "bg-[#faf3ea]",
+    progress: "from-[#f6c58d] to-[#d69167]",
   },
 }
 
@@ -179,7 +181,14 @@ function Card({
   children: React.ReactNode
   className?: string
 }) {
-  return <div className={`rounded-[2rem] border border-slate-200 bg-white/92 p-6 shadow-[0_18px_60px_rgba(15,23,42,0.05)] ${className}`}>{children}</div>
+  return (
+    <div
+      className={`relative overflow-hidden rounded-[2rem] border border-[#e9ddd0] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,250,245,0.84))] p-6 shadow-[0_24px_80px_rgba(73,47,24,0.08)] backdrop-blur-xl ${className}`}
+    >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.95),transparent)]" />
+      {children}
+    </div>
+  )
 }
 
 function MetricCard({
@@ -195,13 +204,53 @@ function MetricCard({
 }) {
   return (
     <Card className={`relative overflow-hidden p-5 ${tint}`}>
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-white/80" />
-      <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{label}</div>
-      <div className="mt-3 text-3xl font-black text-slate-950">{value}</div>
-      <div className="mt-1 text-sm text-slate-600">{note}</div>
+      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/45 blur-2xl" />
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-white/90" />
+      <div className="text-[11px] uppercase tracking-[0.24em] text-[#8b7b6a]">{label}</div>
+      <div className="mt-3 text-3xl font-black tracking-tight text-[#1f1711]">{value}</div>
+      <div className="mt-1 text-sm text-[#75685d]">{note}</div>
     </Card>
   )
 }
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#948271]">{children}</div>
+}
+
+function GlassTile({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return <div className={`rounded-[1.6rem] border border-[#eee2d5] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(251,245,238,0.82))] p-4 shadow-[0_10px_35px_rgba(117,88,57,0.06)] ${className}`}>{children}</div>
+}
+
+function StatPill({
+  label,
+  value,
+  tone = "light",
+}: {
+  label: string
+  value: string
+  tone?: "light" | "dark"
+}) {
+  const classes =
+    tone === "dark"
+      ? "border-[#1f1915] bg-[#181310] text-white"
+      : "border-[#eee2d5] bg-white/80 text-[#241c16]"
+
+  return (
+    <div className={`rounded-[1.35rem] border p-4 ${classes}`}>
+      <div className={`text-[11px] uppercase tracking-[0.22em] ${tone === "dark" ? "text-white/55" : "text-[#9a8979]"}`}>{label}</div>
+      <div className="mt-3 text-2xl font-black">{value}</div>
+    </div>
+  )
+}
+
+const inputClassName =
+  "rounded-[1.2rem] border border-[#eadfce] bg-[linear-gradient(180deg,#fffdfa,#fbf5ee)] px-4 py-3 text-[#241c16] outline-none transition placeholder:text-[#af9d8d] focus:border-[#d8ad7a] focus:bg-white"
 
 function ActivityGuide({
   accent,
@@ -436,7 +485,6 @@ export default function BorrowerDashboard({
       y: -5,
     },
   }
-
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) {
@@ -455,74 +503,88 @@ export default function BorrowerDashboard({
   const renderOverviewPage = () => (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-        <MetricCard label="Eligible amount" value={money(180000)} note="Pre-approved limit" tint="bg-gradient-to-br from-sky-50 to-white" />
-        <MetricCard label="Selected offer" value={money(amount)} note={`${tenure} day plan`} tint="bg-gradient-to-br from-emerald-50 to-white" />
-        <MetricCard label="Reward points" value={`${points}`} note={canRedeem ? "Ready to redeem" : "Target 500"} tint="bg-gradient-to-br from-amber-50 to-white" />
-        <MetricCard label="Disbursal" value={funded ? "Released" : "Pending"} note={funded ? "Completed" : "Waiting"} tint="bg-gradient-to-br from-violet-50 to-white" />
+        <MetricCard label="Eligible amount" value={money(180000)} note="Pre-approved limit" tint="bg-gradient-to-br from-[#fff8ef] via-white to-[#fff3e4]" />
+        <MetricCard label="Selected offer" value={money(amount)} note={`${tenure} day plan`} tint="bg-gradient-to-br from-[#f8f3ec] via-white to-[#fdf7ef]" />
+        <MetricCard label="Reward points" value={`${points}`} note={canRedeem ? "Ready to redeem" : "Target 500"} tint="bg-gradient-to-br from-[#fffaf1] via-white to-[#f8eee2]" />
+        <MetricCard label="Disbursal" value={funded ? "Released" : "Pending"} note={funded ? "Completed" : "Waiting"} tint="bg-gradient-to-br from-[#fff6ef] via-white to-[#f7efe9]" />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_380px]">
-        <Card>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Journey steps</div>
-              <h2 className="mt-2 text-2xl font-black text-slate-950">Move through the loan process</h2>
-            </div>
-            <div className={`rounded-full border px-4 py-2 text-sm font-medium ${accent.chip}`}>{completion}% complete</div>
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {[
-              {
-                title: "Complete application",
-                text: "Fill identity, city, employer, and income details before proceeding.",
-                href: "/dashboard/application",
-                done: completedSteps.identity && completedSteps.profile,
-              },
-              {
-                title: "Tune the offer",
-                text: "Choose the amount and tenure that best fits the borrower.",
-                href: "/dashboard/offer-studio",
-                done: completedSteps.offer,
-              },
-              {
-                title: "Add bank account",
-                text: "Review and confirm the account that will receive the disbursal.",
-                href: "/dashboard/disbursal",
-                done: completedSteps.bank,
-              },
-              {
-                title: "Check repayment",
-                text: "Review the monthly repayment comfort before releasing funds.",
-                href: "/dashboard/repayment-plan",
-                done: completedSteps.funded,
-              },
-            ].map((item) => (
-              <div key={item.title} className="rounded-[1.5rem] bg-slate-50 p-4">
-                <div className="flex items-center justify-between">
-                  <div className="font-semibold text-slate-950">{item.title}</div>
-                  <div className={`rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                    {item.done ? "Done" : "Open"}
-                  </div>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-500">{item.text}</p>
-                <Button type="button" variant="outline" onClick={() => goToPage(item.href)} className="mt-4 rounded-full px-4">
-                  Open
-                </Button>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_390px]">
+        <Card className="overflow-hidden">
+          <div className="rounded-[1.8rem] border border-[#efe3d8] bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(250,244,237,0.92))] p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <SectionLabel>Journey steps</SectionLabel>
+                <h2 className="mt-2 text-2xl font-black text-[#241c16]">Move through the loan process</h2>
               </div>
-            ))}
+              <div className={`rounded-full border px-4 py-2 text-sm font-medium ${accent.chip}`}>{completion}% complete</div>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {[
+                {
+                  title: "Complete application",
+                  text: "Fill identity, city, employer, and income details before proceeding.",
+                  href: "/dashboard/application",
+                  done: completedSteps.identity && completedSteps.profile,
+                },
+                {
+                  title: "Tune the offer",
+                  text: "Choose the amount and tenure that best fits the borrower.",
+                  href: "/dashboard/offer-studio",
+                  done: completedSteps.offer,
+                },
+                {
+                  title: "Add bank account",
+                  text: "Review and confirm the account that will receive the disbursal.",
+                  href: "/dashboard/disbursal",
+                  done: completedSteps.bank,
+                },
+                {
+                  title: "Check repayment",
+                  text: "Review the monthly repayment comfort before releasing funds.",
+                  href: "/dashboard/repayment-plan",
+                  done: completedSteps.funded,
+                },
+              ].map((item) => (
+                <GlassTile key={item.title} className="relative overflow-hidden p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-semibold text-[#241c16]">{item.title}</div>
+                      <p className="mt-2 max-w-[20rem] text-sm leading-6 text-[#75685d]">{item.text}</p>
+                    </div>
+                    <div className={`relative z-10 shrink-0 rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-[#f7ede2] text-[#8a6545]"}`}>
+                      {item.done ? "Done" : "Open"}
+                    </div>
+                  </div>
+                  <div className="relative z-10 mt-6 flex items-center justify-between gap-4">
+                    <div className="text-xs uppercase tracking-[0.2em] text-[#aa9684]">{item.done ? "Completed checkpoint" : "Next available step"}</div>
+                    <Button type="button" variant="outline" onClick={() => goToPage(item.href)} className="shrink-0 rounded-full border-[#eadfce] bg-white/90 px-4">
+                      Open
+                    </Button>
+                  </div>
+                </GlassTile>
+              ))}
+            </div>
           </div>
         </Card>
 
-        <Card>
-          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Reward system</div>
-          <h2 className="mt-2 text-2xl font-black text-slate-950">Points and redemption</h2>
-          <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-200">
-            <motion.div className={`h-full rounded-full bg-gradient-to-r ${accent.progress}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, (points / 500) * 100)}%` }} />
-          </div>
-          <div className="mt-3 flex items-center justify-between text-sm text-slate-600">
-            <span>{points} points earned</span>
-            <span>{Math.max(0, 500 - points)} to unlock</span>
+        <Card className="overflow-hidden">
+          <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
+            <SectionLabel>Reward system</SectionLabel>
+            <h2 className="mt-2 text-2xl font-black text-white">Points and redemption</h2>
+            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+              <motion.div className={`h-full rounded-full bg-gradient-to-r ${accent.progress}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, (points / 500) * 100)}%` }} />
+            </div>
+            <div className="mt-3 flex items-center justify-between text-sm text-white/65">
+              <span>{points} points earned</span>
+              <span>{Math.max(0, 500 - points)} to unlock</span>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <StatPill label="Completion" value={`${completion}%`} tone="dark" />
+              <StatPill label="Reward target" value="500" tone="dark" />
+            </div>
           </div>
 
           <div className="mt-5 space-y-3">
@@ -533,18 +595,18 @@ export default function BorrowerDashboard({
               { label: "Bank verified", earned: completedSteps.bank },
               { label: "Loan disbursed", earned: completedSteps.funded },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                <span className="text-sm text-slate-700">{item.label}</span>
+              <GlassTile key={item.label} className="flex items-center justify-between px-4 py-3">
+                <span className="text-sm text-[#5e5044]">{item.label}</span>
                 <span className={`text-xs font-semibold ${item.earned ? "text-emerald-700" : "text-slate-500"}`}>
                   {item.earned ? "+100 earned" : "+100 pending"}
                 </span>
-              </div>
+              </GlassTile>
             ))}
           </div>
 
-          <div className={`mt-5 rounded-[1.5rem] border px-4 py-4 ${canRedeem ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
-            <div className="font-semibold text-slate-950">{canRedeem ? "Reward unlocked" : "Redemption locked"}</div>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
+          <div className={`mt-5 rounded-[1.7rem] border px-5 py-5 ${canRedeem ? "border-emerald-200 bg-emerald-50" : "border-[#ead8c5] bg-[#fff5e8]"}`}>
+            <div className="font-semibold text-[#241c16]">{canRedeem ? "Reward unlocked" : "Redemption locked"}</div>
+            <p className="mt-1 text-sm leading-6 text-[#6e6054]">
               {canRedeem
                 ? "The borrower has reached 500 points and can redeem a benefit like a fee waiver, cashback, or priority support."
                 : "Borrowers unlock rewards once they complete all five steps and reach 500 points."}
@@ -557,11 +619,11 @@ export default function BorrowerDashboard({
 
   const renderApplicationPage = () => (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
-      <Card>
+      <Card className="overflow-hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Application form</div>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">Start the borrower application</h2>
+            <SectionLabel>Application form</SectionLabel>
+            <h2 className="mt-2 text-2xl font-black text-[#1f1711]">Start the borrower application</h2>
           </div>
           <div className={`rounded-full border px-4 py-2 text-sm font-medium ${completedSteps.identity && completedSteps.profile ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
             {completedSteps.identity && completedSteps.profile ? "+200 points earned" : "Earn up to 200 points"}
@@ -569,34 +631,34 @@ export default function BorrowerDashboard({
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
             Full name
-            <input value={profile.fullName} onChange={(event) => setProfile((current) => ({ ...current, fullName: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
+            <input value={profile.fullName} onChange={(event) => setProfile((current) => ({ ...current, fullName: event.target.value }))} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
             Mobile
-            <input value={profile.mobile} onChange={(event) => setProfile((current) => ({ ...current, mobile: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
+            <input value={profile.mobile} onChange={(event) => setProfile((current) => ({ ...current, mobile: event.target.value }))} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
             Email
-            <input value={profile.email} onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
+            <input value={profile.email} onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
             City
-            <input value={profile.city} onChange={(event) => setProfile((current) => ({ ...current, city: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
+            <input value={profile.city} onChange={(event) => setProfile((current) => ({ ...current, city: event.target.value }))} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
             Employer
-            <input value={profile.employer} onChange={(event) => setProfile((current) => ({ ...current, employer: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
+            <input value={profile.employer} onChange={(event) => setProfile((current) => ({ ...current, employer: event.target.value }))} className={inputClassName} />
           </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
+          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
             Monthly income
             <input
               type="number"
               min={0}
               value={profile.income}
               onChange={(event) => setProfile((current) => ({ ...current, income: Number(event.target.value) || 0 }))}
-              className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300"
+              className={inputClassName}
             />
           </label>
         </div>
@@ -611,23 +673,25 @@ export default function BorrowerDashboard({
         </div>
       </Card>
 
-      <Card>
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Form status</div>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">Application checkpoints</h2>
+      <Card className="overflow-hidden">
+        <div className="rounded-[1.8rem] bg-[#181310] p-5 text-white">
+          <SectionLabel>Form status</SectionLabel>
+          <h2 className="mt-2 text-2xl font-black text-white">Application checkpoints</h2>
+        </div>
         <div className="mt-5 space-y-3">
           {[
             { label: "Identity details complete", done: completedSteps.identity, points: 100 },
             { label: "Profile and income complete", done: completedSteps.profile, points: 100 },
           ].map((item) => (
-            <div key={item.label} className="rounded-[1.5rem] bg-slate-50 p-4">
+            <GlassTile key={item.label} className="p-4">
               <div className="flex items-center justify-between">
-                <div className="font-medium text-slate-950">{item.label}</div>
+                <div className="font-medium text-[#241c16]">{item.label}</div>
                 <div className={`rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
                   {item.done ? "Complete" : "Pending"}
                 </div>
               </div>
-              <div className="mt-2 text-sm text-slate-500">{item.done ? `+${item.points} points earned` : `Complete this step to earn +${item.points} points`}</div>
-            </div>
+              <div className="mt-2 text-sm text-[#75685d]">{item.done ? `+${item.points} points earned` : `Complete this step to earn +${item.points} points`}</div>
+            </GlassTile>
           ))}
         </div>
       </Card>
@@ -636,39 +700,39 @@ export default function BorrowerDashboard({
 
   const renderOfferStudioPage = () => (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-      <Card>
+      <Card className="overflow-hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Offer studio</div>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">Tune the amount and tenure</h2>
+            <SectionLabel>Offer studio</SectionLabel>
+            <h2 className="mt-2 text-2xl font-black text-[#241c16]">Tune the amount and tenure</h2>
           </div>
           <div className={`rounded-full border px-4 py-2 text-sm font-medium ${accent.chip}`}>Utilization {utilization}%</div>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-[1.6rem] bg-slate-50 p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Loan amount</div>
-            <motion.div key={amount} className="mt-3 text-4xl font-black text-slate-950" initial={{ opacity: 0.7, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }}>
+          <GlassTile className="bg-[linear-gradient(135deg,rgba(255,255,255,0.85),rgba(249,241,231,0.95))] p-5">
+            <div className="text-xs uppercase tracking-[0.22em] text-[#9a8979]">Loan amount</div>
+            <motion.div key={amount} className="mt-3 text-4xl font-black text-[#241c16]" initial={{ opacity: 0.7, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }}>
               {money(amount)}
             </motion.div>
             <input type="range" min={10000} max={180000} step={5000} value={amount} onChange={(event) => setAmount(Number(event.target.value))} className="mt-6 w-full" />
-            <div className="mt-2 flex justify-between text-xs text-slate-400">
+            <div className="mt-2 flex justify-between text-xs text-[#9a8979]">
               <span>₹10K</span>
               <span>₹1.8L</span>
             </div>
-          </div>
+          </GlassTile>
 
-          <div className="rounded-[1.6rem] bg-slate-50 p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Repayment tenure</div>
-            <motion.div key={tenure} className="mt-3 text-4xl font-black text-slate-950" initial={{ opacity: 0.7, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }}>
+          <GlassTile className="bg-[linear-gradient(135deg,rgba(255,255,255,0.85),rgba(250,245,237,0.96))] p-5">
+            <div className="text-xs uppercase tracking-[0.22em] text-[#9a8979]">Repayment tenure</div>
+            <motion.div key={tenure} className="mt-3 text-4xl font-black text-[#241c16]" initial={{ opacity: 0.7, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }}>
               {tenure} days
             </motion.div>
             <input type="range" min={30} max={150} step={6} value={tenure} onChange={(event) => setTenure(Number(event.target.value))} className="mt-6 w-full" />
-            <div className="mt-2 flex justify-between text-xs text-slate-400">
+            <div className="mt-2 flex justify-between text-xs text-[#9a8979]">
               <span>30 days</span>
               <span>150 days</span>
             </div>
-          </div>
+          </GlassTile>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -677,26 +741,26 @@ export default function BorrowerDashboard({
             { label: "Fee", value: money(fee) },
             { label: "Total payable", value: money(totalPayable) },
           ].map((item) => (
-            <div key={item.label} className="rounded-[1.4rem] bg-slate-50 px-4 py-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.label}</div>
-              <div className="mt-3 text-2xl font-black text-slate-950">{item.value}</div>
-            </div>
+            <StatPill key={item.label} label={item.label} value={item.value} />
           ))}
         </div>
       </Card>
 
-      <Card>
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Offer result</div>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">What this offer means</h2>
+      <Card className="overflow-hidden">
+        <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
+          <SectionLabel>Offer result</SectionLabel>
+          <h2 className="mt-2 text-2xl font-black text-white">What this offer means</h2>
+          <p className="mt-2 text-sm leading-6 text-white/65">A cleaner summary of the amount impact before you move funds.</p>
+        </div>
         <div className="mt-5 space-y-3">
-          <div className="rounded-[1.5rem] bg-slate-50 p-4">
-            <div className="text-sm text-slate-500">Monthly repayment</div>
-            <div className="mt-2 text-3xl font-black text-slate-950">{money(monthlyRepayment)}</div>
-          </div>
-          <div className="rounded-[1.5rem] bg-slate-50 p-4">
-            <div className="text-sm text-slate-500">Points for this step</div>
-            <div className="mt-2 text-lg font-semibold text-slate-950">{completedSteps.offer ? "+100 earned" : "+100 pending"}</div>
-          </div>
+          <GlassTile>
+            <div className="text-sm text-[#8a7867]">Monthly repayment</div>
+            <div className="mt-2 text-3xl font-black text-[#241c16]">{money(monthlyRepayment)}</div>
+          </GlassTile>
+          <GlassTile>
+            <div className="text-sm text-[#8a7867]">Points for this step</div>
+            <div className="mt-2 text-lg font-semibold text-[#241c16]">{completedSteps.offer ? "+100 earned" : "+100 pending"}</div>
+          </GlassTile>
           <Button type="button" onClick={() => goToPage("/dashboard/disbursal")} className="mt-2 w-full rounded-full bg-slate-950 text-white">
             Continue to disbursal
           </Button>
@@ -706,83 +770,147 @@ export default function BorrowerDashboard({
   )
 
   const renderDisbursalPage = () => (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
-      <Card>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Disbursal</div>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">Review the bank destination</h2>
-          </div>
-          <div className={`flex size-11 items-center justify-center rounded-2xl ${accent.icon}`}>
-            <Landmark className="size-5" />
-          </div>
-        </div>
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_390px]">
+      <div className="space-y-6">
+        <Card className="overflow-hidden p-0">
+          <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="bg-[#181310] px-6 py-7 text-white">
+              <SectionLabel>Disbursal hub</SectionLabel>
+              <h2 className="mt-2 text-3xl font-black text-white md:text-4xl">Release funds with one final bank check.</h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">
+                This section is now focused on a single action: verify the destination account, confirm readiness, and trigger the payout.
+              </p>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Account holder
-            <input value={account.holder} onChange={(event) => setAccount((current) => ({ ...current, holder: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Bank name
-            <input value={account.bank} onChange={(event) => setAccount((current) => ({ ...current, bank: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            Account number
-            <input value={account.accountNumber} onChange={(event) => setAccount((current) => ({ ...current, accountNumber: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-slate-700">
-            IFSC code
-            <input value={account.ifsc} onChange={(event) => setAccount((current) => ({ ...current, ifsc: event.target.value }))} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none transition focus:border-sky-300" />
-          </label>
-        </div>
-
-        <div className={`mt-6 rounded-[1.5rem] ${accent.panel} p-5`}>
-          <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Transfer preview</div>
-          <div className="mt-3 text-3xl font-black text-slate-950">{money(amount)}</div>
-          <div className="mt-2 text-sm text-slate-600">
-            Funds will move to {account.bank} ending in {account.accountNumber.slice(-4)}.
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button type="button" onClick={handleDisbursal} disabled={disbursing || funded} className="rounded-full bg-slate-950 px-5 text-white">
-            {disbursing ? "Processing..." : funded ? "Disbursed" : "Release funds"}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => goToPage("/dashboard/repayment-plan")} className="rounded-full px-5">
-            View repayment
-          </Button>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Disbursal status</div>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">Readiness</h2>
-        <div className="mt-5 space-y-3">
-          {[
-            { label: "Bank details added", done: completedSteps.bank },
-            { label: "Offer selected", done: completedSteps.offer },
-            { label: "Funds released", done: completedSteps.funded },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between rounded-[1.4rem] bg-slate-50 px-4 py-4">
-              <span className="text-sm text-slate-700">{item.label}</span>
-              <span className={`rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
-                {item.done ? "Done" : "Pending"}
-              </span>
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <StatPill label="Payout amount" value={money(amount)} tone="dark" />
+                <StatPill label="Service fee" value={money(fee)} tone="dark" />
+                <StatPill label="Status" value={funded ? "Released" : "Pending"} tone="dark" />
+              </div>
             </div>
-          ))}
+
+            <div className="bg-[linear-gradient(180deg,#fff9f2_0%,#f8ede0_100%)] px-6 py-7">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a8979]">Live destination</div>
+                  <div className="mt-2 text-2xl font-black text-[#241c16]">{account.bank}</div>
+                </div>
+                <div className={`flex size-12 items-center justify-center rounded-[1.3rem] ${accent.icon}`}>
+                  <Landmark className="size-5" />
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-3">
+                <div className="rounded-[1.4rem] border border-[#eadfce] bg-white/80 px-4 py-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-[#9a8979]">Account ending</div>
+                  <div className="mt-2 text-3xl font-black text-[#241c16]">{account.accountNumber.slice(-4)}</div>
+                </div>
+                <div className="rounded-[1.4rem] border border-[#eadfce] bg-white/80 px-4 py-4">
+                  <div className="text-xs uppercase tracking-[0.2em] text-[#9a8979]">IFSC code</div>
+                  <div className="mt-2 text-xl font-semibold text-[#241c16]">{account.ifsc}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <Card className="overflow-hidden">
+            <SectionLabel>Beneficiary details</SectionLabel>
+            <h3 className="mt-2 text-2xl font-black text-[#241c16]">Primary bank information</h3>
+            <div className="mt-6 grid gap-4">
+              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
+                Account holder
+            <input value={account.holder} onChange={(event) => setAccount((current) => ({ ...current, holder: event.target.value }))} className={inputClassName} />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
+                Bank name
+            <input value={account.bank} onChange={(event) => setAccount((current) => ({ ...current, bank: event.target.value }))} className={inputClassName} />
+              </label>
+            </div>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <SectionLabel>Routing details</SectionLabel>
+            <h3 className="mt-2 text-2xl font-black text-[#241c16]">Transfer routing check</h3>
+            <div className="mt-6 grid gap-4">
+              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
+                Account number
+            <input value={account.accountNumber} onChange={(event) => setAccount((current) => ({ ...current, accountNumber: event.target.value }))} className={inputClassName} />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
+                IFSC code
+            <input value={account.ifsc} onChange={(event) => setAccount((current) => ({ ...current, ifsc: event.target.value }))} className={inputClassName} />
+              </label>
+            </div>
+          </Card>
         </div>
-      </Card>
+      </div>
+
+      <div className="space-y-6">
+        <Card className="overflow-hidden">
+          <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
+            <SectionLabel>Release action</SectionLabel>
+            <h3 className="mt-2 text-2xl font-black text-white">Payout control rail</h3>
+            <p className="mt-2 text-sm leading-6 text-white/65">Use this side rail to confirm readiness and trigger the disbursal without scrolling through the form again.</p>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            <GlassTile>
+              <div className="text-sm text-[#8a7867]">Borrower</div>
+              <div className="mt-1 text-xl font-semibold text-[#241c16]">{profile.fullName}</div>
+            </GlassTile>
+            <GlassTile>
+              <div className="text-sm text-[#8a7867]">Destination bank</div>
+              <div className="mt-1 text-xl font-semibold text-[#241c16]">{account.bank}</div>
+            </GlassTile>
+            <GlassTile>
+              <div className="text-sm text-[#8a7867]">Release amount</div>
+              <div className="mt-1 text-3xl font-black text-[#241c16]">{money(amount)}</div>
+            </GlassTile>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3">
+            <Button type="button" onClick={handleDisbursal} disabled={disbursing || funded} className="h-12 rounded-full bg-[#17120f] text-white">
+              {disbursing ? "Processing..." : funded ? "Disbursed" : "Release funds"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => goToPage("/dashboard/repayment-plan")} className="h-12 rounded-full border-[#eadfce] bg-white">
+              View repayment
+            </Button>
+          </div>
+        </Card>
+
+        <Card>
+          <SectionLabel>Readiness checks</SectionLabel>
+          <h3 className="mt-2 text-2xl font-black text-[#241c16]">Before release</h3>
+          <div className="mt-5 space-y-3">
+            {[
+              { label: "Bank details added", done: completedSteps.bank },
+              { label: "Offer selected", done: completedSteps.offer },
+              { label: "Funds released", done: completedSteps.funded },
+            ].map((item, index) => (
+              <GlassTile key={item.label} className="flex items-center justify-between px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-8 items-center justify-center rounded-full bg-[#f7ede2] text-xs font-bold text-[#8a6545]">{index + 1}</div>
+                  <span className="text-sm text-[#5f5146]">{item.label}</span>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
+                  {item.done ? "Done" : "Pending"}
+                </span>
+              </GlassTile>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 
   const renderRepaymentPage = () => (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-      <Card>
+      <Card className="overflow-hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Repayment plan</div>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">Comfort over time</h2>
+            <SectionLabel>Repayment plan</SectionLabel>
+            <h2 className="mt-2 text-2xl font-black text-[#241c16]">Comfort over time</h2>
           </div>
           <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
             <TrendingUp className="size-4" />
@@ -790,7 +918,7 @@ export default function BorrowerDashboard({
           </div>
         </div>
 
-        <div className="mt-7 grid grid-cols-8 items-end gap-3 rounded-[1.6rem] bg-slate-50 px-4 pb-4 pt-8">
+        <div className="mt-7 grid grid-cols-8 items-end gap-3 rounded-[1.8rem] border border-[#ece0d5] bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(248,241,234,0.95))] px-4 pb-4 pt-8">
           {repaymentBars.map((height, index) => (
             <motion.div
               key={height}
@@ -810,22 +938,25 @@ export default function BorrowerDashboard({
           ].map((item) => {
             const Icon = item.icon
             return (
-              <div key={item.label} className="rounded-[1.4rem] bg-slate-50 px-4 py-4">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
+              <GlassTile key={item.label} className="px-4 py-4">
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-[#9a8979]">
                   <span>{item.label}</span>
                   <Icon className="size-4" />
                 </div>
-                <div className="mt-3 text-2xl font-black text-slate-950">{item.value}</div>
-              </div>
+                <div className="mt-3 text-2xl font-black text-[#241c16]">{item.value}</div>
+              </GlassTile>
             )
           })}
         </div>
       </Card>
 
-      <Card>
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Scan to pay</div>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">Repayment QR</h2>
-        <div className="mt-5 flex justify-center rounded-[1.6rem] bg-slate-50 p-4">
+      <Card className="overflow-hidden">
+        <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
+          <SectionLabel>Scan to pay</SectionLabel>
+          <h2 className="mt-2 text-2xl font-black text-white">Repayment QR</h2>
+          <p className="mt-2 text-sm leading-6 text-white/65">A cleaner pay panel that keeps the scan action obvious.</p>
+        </div>
+        <div className="mt-5 flex justify-center rounded-[1.6rem] border border-[#ece0d5] bg-[#faf5ef] p-4">
           <Image
             src={`/api/payment-qr?data=${encodeURIComponent(upiPaymentUrl)}`}
             alt="QR code for loan repayment"
@@ -842,14 +973,14 @@ export default function BorrowerDashboard({
             { label: "UPI ID", value: "qualoan@upi" },
             { label: "Reference", value: profile.fullName },
           ].map((item) => (
-            <div key={item.label} className="rounded-[1.4rem] bg-slate-50 px-4 py-4">
-              <div className="text-sm text-slate-500">{item.label}</div>
-              <div className="mt-1 text-xl font-semibold text-slate-950">{item.value}</div>
-            </div>
+            <GlassTile key={item.label} className="px-4 py-4">
+              <div className="text-sm text-[#8a7867]">{item.label}</div>
+              <div className="mt-1 text-xl font-semibold text-[#241c16]">{item.value}</div>
+            </GlassTile>
           ))}
         </div>
 
-        <p className="mt-4 text-sm leading-6 text-slate-500">
+        <p className="mt-4 text-sm leading-6 text-[#75685d]">
           The client can scan this QR from any UPI app to pay the current repayment amount directly.
         </p>
       </Card>
@@ -858,11 +989,13 @@ export default function BorrowerDashboard({
 
   const renderProfilePage = () => (
     <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-      <Card>
-        <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Profile photo</div>
-        <h2 className="mt-2 text-2xl font-black text-slate-950">Client identity card</h2>
+      <Card className="overflow-hidden">
+        <div className="rounded-[1.8rem] bg-[#181310] p-5 text-white">
+          <SectionLabel>Profile photo</SectionLabel>
+          <h2 className="mt-2 text-2xl font-black text-white">Client identity card</h2>
+        </div>
 
-        <div className="mt-6 flex flex-col items-center rounded-[1.8rem] bg-slate-50 p-6 text-center">
+        <div className="mt-6 flex flex-col items-center rounded-[1.8rem] border border-[#ece0d5] bg-[linear-gradient(180deg,#fffdfa,#f8f0e7)] p-6 text-center">
           {profilePhoto ? (
             <Image
               src={profilePhoto}
@@ -873,12 +1006,12 @@ export default function BorrowerDashboard({
             />
           ) : (
             <div className={`flex size-38 items-center justify-center rounded-[2rem] ${accent.panel}`}>
-              <span className="text-5xl font-black text-slate-700">{profile.fullName.charAt(0).toUpperCase()}</span>
+              <span className="text-5xl font-black text-[#6e5c4b]">{profile.fullName.charAt(0).toUpperCase()}</span>
             </div>
           )}
 
-          <div className="mt-5 text-2xl font-black text-slate-950">{profile.fullName}</div>
-          <div className="mt-1 text-sm text-slate-500">{profile.email}</div>
+          <div className="mt-5 text-2xl font-black text-[#241c16]">{profile.fullName}</div>
+          <div className="mt-1 text-sm text-[#75685d]">{profile.email}</div>
 
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
           <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="mt-5 rounded-full px-5">
@@ -893,20 +1026,20 @@ export default function BorrowerDashboard({
             { label: "Reward points", value: `${points}` },
             { label: "Sanction amount", value: money(profile.sanctionAmount) },
           ].map((item) => (
-            <div key={item.label} className="rounded-[1.4rem] bg-slate-50 px-4 py-4">
-              <div className="text-sm text-slate-500">{item.label}</div>
-              <div className="mt-1 text-xl font-semibold text-slate-950">{item.value}</div>
-            </div>
+            <GlassTile key={item.label} className="px-4 py-4">
+              <div className="text-sm text-[#8a7867]">{item.label}</div>
+              <div className="mt-1 text-xl font-semibold text-[#241c16]">{item.value}</div>
+            </GlassTile>
           ))}
         </div>
       </Card>
 
-      <Card>
+      <Card className="overflow-hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Client profile</div>
-            <h2 className="mt-2 text-2xl font-black text-slate-950">View client and loan details</h2>
-            <p className="mt-2 text-sm text-slate-500">Only the profile picture can be changed here. All loan and KYC details are locked to the actual record.</p>
+            <SectionLabel>Client profile</SectionLabel>
+            <h2 className="mt-2 text-2xl font-black text-[#241c16]">View client and loan details</h2>
+            <p className="mt-2 text-sm text-[#75685d]">Only the profile picture can be changed here. All loan and KYC details are locked to the actual record.</p>
           </div>
           <div className={`rounded-full border px-4 py-2 text-sm font-medium ${accent.chip}`}>Read only profile</div>
         </div>
@@ -927,10 +1060,10 @@ export default function BorrowerDashboard({
             { label: "Repayment amount", value: money(amount) },
             { label: "Repayment date", value: profile.repaymentDate },
           ].map((item) => (
-            <div key={item.label} className="rounded-[1.4rem] border border-slate-200 bg-slate-50 px-4 py-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.label}</div>
-              <div className="mt-2 text-lg font-semibold text-slate-950">{item.value}</div>
-            </div>
+            <GlassTile key={item.label} className="px-4 py-4">
+              <div className="text-xs uppercase tracking-[0.2em] text-[#9a8979]">{item.label}</div>
+              <div className="mt-2 text-lg font-semibold text-[#241c16]">{item.value}</div>
+            </GlassTile>
           ))}
         </div>
 
@@ -944,14 +1077,14 @@ export default function BorrowerDashboard({
   )
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#fcfeff_0%,#f4f9ff_38%,#fffaf3_100%)] text-slate-950">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-8%] top-16 h-64 w-64 rounded-full bg-sky-200/35 blur-3xl" />
-        <div className="absolute right-[-10%] top-40 h-72 w-72 rounded-full bg-amber-200/30 blur-3xl" />
-        <div className="absolute bottom-16 left-1/3 h-56 w-56 rounded-full bg-emerald-200/25 blur-3xl" />
-      </div>
-      <div className="mx-auto max-w-[1500px] px-4 py-6 md:px-6 lg:px-8">
-        <div className="grid items-start gap-6 lg:grid-cols-[108px_minmax(0,1fr)]">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#f1e8de] text-[#241c16]">
+      <BackgroundPaths
+        showContent={false}
+        className="absolute inset-0 z-0 min-h-full bg-transparent opacity-75"
+        pathClassName="text-[#6f4f35]"
+      />
+      <div className="relative z-10 mx-auto max-w-[1550px] px-4 py-6 md:px-6 lg:px-8">
+        <div className="grid items-start gap-6 lg:grid-cols-[290px_minmax(0,1fr)]">
           <AnimatePresence>
             {sidebarOpen && (
               <motion.button
@@ -967,11 +1100,11 @@ export default function BorrowerDashboard({
           </AnimatePresence>
 
           <aside
-            className={`fixed inset-y-0 left-0 z-40 w-[286px] max-w-[calc(100vw-1.5rem)] px-4 py-6 transition-transform duration-300 md:px-6 lg:hidden ${
+            className={`fixed inset-y-0 left-0 z-40 w-[310px] max-w-[calc(100vw-1.5rem)] px-4 py-6 transition-transform duration-300 md:px-6 lg:hidden ${
               sidebarOpen ? "translate-x-0" : "-translate-x-[110%]"
             }`}
           >
-            <Card className="h-full rounded-[2.25rem] border-white/80 bg-white/90 p-4 backdrop-blur-xl">
+            <Card className="h-full rounded-[2.25rem] bg-[rgba(255,255,255,0.9)] p-4">
               <div className="mb-4 flex items-center justify-between">
                 <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Menu</div>
                 <button
@@ -1062,75 +1195,117 @@ export default function BorrowerDashboard({
           </aside>
 
           <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
-            <Card className="rounded-[2rem] border-white/80 bg-white/88 p-3 backdrop-blur-xl">
-              <div className={`rounded-[1.7rem] bg-gradient-to-br ${accent.wash} p-3 text-center`}>
-                <div className="mx-auto flex size-12 items-center justify-center rounded-[1.1rem] bg-white text-slate-950 shadow-sm">
-                  {profilePhoto ? (
-                    <Image src={profilePhoto} alt={`${profile.fullName} avatar`} width={48} height={48} className="size-12 rounded-[1.1rem] object-cover" />
-                  ) : (
-                    <span className="text-lg font-black">{profile.fullName.charAt(0).toUpperCase()}</span>
-                  )}
+            <Card className="rounded-[2.2rem] bg-[rgba(255,255,255,0.88)] p-4">
+              <div className="mb-5 flex items-center gap-3 rounded-[1.8rem] bg-[linear-gradient(135deg,#17120f,#31251d)] px-4 py-4 text-white">
+                <div className="flex size-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-base font-black text-white">Q</div>
+                <div>
+                  <div className="text-sm font-semibold text-white">QuaLoan</div>
+                  <div className="text-xs uppercase tracking-[0.22em] text-white/55">Workspace</div>
                 </div>
-                <div className="mt-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Menu</div>
               </div>
 
-              <div className="mt-3 space-y-2">
-                {navItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = item.id === activePage
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      className={`flex flex-col items-center gap-2 rounded-[1.4rem] border px-2 py-3 text-center text-[11px] font-medium transition ${
-                        isActive ? `${accent.panel} border-slate-200 text-slate-950 shadow-sm` : "border-transparent text-slate-500 hover:border-slate-200 hover:bg-white hover:text-slate-900"
-                      }`}
-                    >
-                      <div className={`flex size-10 items-center justify-center rounded-[1rem] ${isActive ? accent.icon : "bg-slate-100 text-slate-500"}`}>
-                        <Icon className="size-4" />
-                      </div>
-                      <div className="leading-4">{item.short}</div>
-                    </Link>
-                  )
-                })}
+              <div className={`rounded-[1.8rem] bg-gradient-to-br ${accent.wash} p-4`}>
+                <div className="flex items-center gap-3">
+                  <div className="flex size-14 items-center justify-center rounded-[1.2rem] bg-white text-[#241c16] shadow-sm">
+                    {profilePhoto ? (
+                      <Image src={profilePhoto} alt={`${profile.fullName} avatar`} width={56} height={56} className="size-14 rounded-[1.2rem] object-cover" />
+                    ) : (
+                      <span className="text-xl font-black">{profile.fullName.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-[#8b7b6a]">Borrower</div>
+                    <div className="mt-1 text-lg font-black text-[#241c16]">{profile.fullName}</div>
+                    <div className="text-sm text-[#75685d]">{profile.mobile}</div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-[1.2rem] bg-white/80 p-3">
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-[#8b7b6a]">Progress</div>
+                    <div className="mt-2 text-2xl font-black text-[#241c16]">{completion}%</div>
+                  </div>
+                  <div className="rounded-[1.2rem] bg-white/80 p-3">
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-[#8b7b6a]">Points</div>
+                    <div className="mt-2 text-2xl font-black text-[#241c16]">{points}</div>
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-3 rounded-[1.4rem] bg-slate-50/90 px-3 py-4 text-center">
-                <div className="text-[10px] uppercase tracking-[0.22em] text-slate-400">Points</div>
-                <div className="mt-1 text-xl font-black text-slate-950">{points}</div>
+              <div className="mt-5">
+                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8f7d6d]">Loan flow</div>
+                <div className="space-y-2">
+                  {navItems.map((item) => {
+                    const Icon = item.icon
+                    const isActive = item.id === activePage
+                    return (
+                      <Link
+                        key={item.id}
+                        href={item.href}
+                        className={`flex items-center justify-between rounded-[1.35rem] border px-3 py-3 text-sm transition ${
+                          isActive
+                            ? "border-[#e6d7c8] bg-white text-[#241c16] shadow-[0_10px_30px_rgba(117,88,57,0.07)]"
+                            : "border-transparent text-[#75685d] hover:border-[#eadfce] hover:bg-white/80 hover:text-[#241c16]"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`flex size-10 items-center justify-center rounded-[1rem] ${isActive ? accent.icon : "bg-[#f5eee7] text-[#7b6b5d]"}`}>
+                            <Icon className="size-4" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{item.label}</div>
+                            <div className="text-xs text-[#9a8979]">{item.short}</div>
+                          </div>
+                        </div>
+                        <ChevronRight className="size-4 opacity-40" />
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-[1.6rem] bg-[linear-gradient(180deg,#faf5ef,#f5ede4)] p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8f7d6d]">Reports</div>
+                <div className="mt-3 space-y-2 text-sm text-[#5f5146]">
+                  <div className="flex items-center justify-between rounded-full bg-white/80 px-3 py-2">
+                    <span>Repayment health</span>
+                    <span className="font-semibold">{Math.round((points / 500) * 100)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-full bg-white/80 px-3 py-2">
+                    <span>Bank verified</span>
+                    <span className="font-semibold">{completedSteps.bank ? "Yes" : "No"}</span>
+                  </div>
+                </div>
               </div>
             </Card>
           </aside>
 
           <section className="space-y-6">
-            <div className="rounded-[2rem] border border-white/80 bg-white/80 p-3 shadow-[0_20px_70px_rgba(15,23,42,0.05)] backdrop-blur-xl">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] border border-slate-100 bg-white/80 px-4 py-3">
+            <div className="p-0">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.8rem] border border-[#eadfce] bg-[rgba(255,255,255,0.82)] px-4 py-3 shadow-[0_16px_40px_rgba(117,88,57,0.06)] backdrop-blur-xl">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setSidebarOpen((current) => !current)}
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 lg:hidden"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#eadfce] bg-white px-4 py-2 text-sm font-medium text-[#5b4c40] shadow-sm transition hover:border-[#dbcab6] lg:hidden"
                   >
                     <Menu className="size-4" />
                     {sidebarOpen ? "Close" : "Menu"}
                   </button>
-                  <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] ${accent.chip}`}>
-                    <Sparkles className="size-3.5" />
-                    {copy.eyebrow}
+                  <div className="relative hidden min-w-[280px] flex-1 items-center md:flex lg:min-w-[340px]">
+                    <Search className="pointer-events-none absolute left-4 size-4 text-[#9a8979]" />
+                    <input readOnly value="Try searching borrower insights" className="h-11 w-full rounded-full border border-[#ece1d6] bg-[#fbf8f4] pl-11 pr-4 text-sm text-[#9a8979] outline-none" />
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="hidden rounded-full bg-slate-50 px-4 py-2 text-sm text-slate-500 md:block">
-                    Next step: <span className="font-semibold text-slate-900">{nextNavItem.label}</span>
-                  </div>
-                  <button className="flex size-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
+                  <button className="flex size-11 items-center justify-center rounded-full border border-[#eadfce] bg-white text-[#6f6054] shadow-sm">
                     <Bell className="size-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => goToPage("/dashboard/profile")}
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#eadfce] bg-white px-4 py-2 text-sm font-medium text-[#5f5146] shadow-sm transition hover:border-[#dbcab6]"
                   >
                     <div className={`flex size-7 items-center justify-center rounded-full ${accent.icon}`}>
                       {profilePhoto ? (
@@ -1147,36 +1322,41 @@ export default function BorrowerDashboard({
                     </div>
                     {profile.fullName}
                   </button>
-                  <Button type="button" variant="outline" onClick={handleLogout} className="rounded-full bg-white px-4">
+                  <Button type="button" variant="outline" onClick={handleLogout} className="rounded-full border-[#eadfce] bg-white px-4 text-[#5f5146]">
                     Logout
                   </Button>
                 </div>
               </div>
 
-              <div className={`mt-3 overflow-hidden rounded-[1.8rem] border border-slate-100 bg-gradient-to-br ${accent.wash} p-6`}>
-                <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_320px] lg:items-end">
+              <div className="mt-3 overflow-hidden rounded-[2rem] border border-[#ebdfd2] bg-[rgba(255,255,255,0.78)] p-6 shadow-[0_18px_48px_rgba(117,88,57,0.06)] backdrop-blur-xl">
+                <div className="flex flex-wrap items-start justify-between gap-6">
                   <div className="max-w-3xl">
-                    <h1 className="text-2xl font-black tracking-tight text-slate-950 md:text-4xl">{copy.title}</h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">{copy.description}</p>
+                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] ${accent.chip}`}>
+                      <Sparkles className="size-3.5" />
+                      {copy.eyebrow}
+                    </div>
+                    <h1 className="mt-5 text-3xl font-black tracking-[-0.03em] text-[#1f1711] md:text-5xl">{copy.title}</h1>
+                    <p className="mt-3 max-w-2xl text-sm leading-6 text-[#75685d] md:text-base">{copy.description}</p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                    <div className="rounded-[1.4rem] bg-white/75 p-4">
-                      <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">Selected amount</div>
-                      <div className="mt-2 text-2xl font-black text-slate-950">{money(amount)}</div>
+                  <div className="grid w-full gap-3 md:grid-cols-3 xl:w-[540px]">
+                    <div className="rounded-[1.4rem] border border-[#efe3d7] bg-[#fcf8f4] p-4">
+                      <div className="text-[11px] uppercase tracking-[0.22em] text-[#9a8979]">Selected amount</div>
+                      <div className="mt-3 text-2xl font-black text-[#241c16]">{money(amount)}</div>
                     </div>
-                    <div className="rounded-[1.4rem] bg-white/75 p-4">
-                      <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">Repayment window</div>
-                      <div className="mt-2 text-2xl font-black text-slate-950">{tenure} days</div>
+                    <div className="rounded-[1.4rem] border border-[#efe3d7] bg-[#fcf8f4] p-4">
+                      <div className="text-[11px] uppercase tracking-[0.22em] text-[#9a8979]">Repayment window</div>
+                      <div className="mt-3 text-2xl font-black text-[#241c16]">{tenure} days</div>
                     </div>
-                    <div className="rounded-[1.4rem] bg-white/75 p-4">
-                      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-slate-400">
+                    <div className="rounded-[1.4rem] border border-[#14110f] bg-[#14110f] p-4 text-white">
+                      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
                         <span>Progress</span>
                         <span>{completion}%</span>
                       </div>
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/80">
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
                         <motion.div className={`h-full rounded-full bg-gradient-to-r ${accent.progress}`} initial={{ width: 0 }} animate={{ width: `${completion}%` }} />
                       </div>
+                      <div className="mt-3 text-sm text-white/70">Next step: {nextNavItem.label}</div>
                     </div>
                   </div>
                 </div>
@@ -1191,7 +1371,7 @@ export default function BorrowerDashboard({
                       key={item.id}
                       href={item.href}
                       className={`inline-flex min-w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
-                        isActive ? `${accent.chip} shadow-sm` : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                        isActive ? "border-[#e6d7c8] bg-white text-[#241c16] shadow-sm" : "border-[#ece1d6] bg-white/80 text-[#6e5f53] hover:border-[#dbcab6] hover:text-[#241c16]"
                       }`}
                     >
                       <Icon className="size-4" />
@@ -1202,9 +1382,9 @@ export default function BorrowerDashboard({
               </div>
             </div>
 
-            <div className="hidden items-center justify-between rounded-[1.6rem] border border-dashed border-slate-200 bg-white/65 px-5 py-4 text-sm text-slate-600 shadow-[0_12px_40px_rgba(15,23,42,0.04)] md:flex">
+            <div className="hidden items-center justify-between rounded-[1.6rem] border border-[#e9dfd4] bg-[rgba(255,255,255,0.76)] px-5 py-4 text-sm text-[#75685d] shadow-[0_12px_40px_rgba(117,88,57,0.05)] backdrop-blur-xl md:flex">
               <div>Workspace rhythm: finish the current step, collect points, and keep the client moving without friction.</div>
-              <div className="font-semibold text-slate-900">{canRedeem ? "Reward unlocked" : `${Math.max(0, 500 - points)} points to unlock rewards`}</div>
+              <div className="font-semibold text-[#241c16]">{canRedeem ? "Reward unlocked" : `${Math.max(0, 500 - points)} points to unlock rewards`}</div>
             </div>
 
             <ActivityGuide
@@ -1226,7 +1406,7 @@ export default function BorrowerDashboard({
             <AnimatePresence>
               {funded && (
                 <motion.div
-                  className="rounded-[1.8rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-800 shadow-[0_14px_40px_rgba(16,185,129,0.08)]"
+                  className="rounded-[1.8rem] border border-[#ecd4b8] bg-[#fff6eb] px-5 py-4 text-[#8b5b2f] shadow-[0_14px_40px_rgba(214,145,103,0.12)]"
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 12 }}

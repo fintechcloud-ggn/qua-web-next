@@ -16,7 +16,6 @@ import CtaSection from "@/components/ui/cta-section"
 import FAQSection from "@/components/ui/faq-section"
 import Footer from "@/components/ui/footer"
 import AuthPopup from "@/components/ui/auth-popup"
-import { Button } from "@/components/ui/button"
 
 type SessionUser = {
   name: string
@@ -89,31 +88,11 @@ export default function HomePageClient({ shouldOpenAuth }: { shouldOpenAuth: boo
     setShowAuthPopup(true)
   }
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
-    setSessionUser(null)
-    setShowAuthPopup(false)
-    router.refresh()
-  }
-
   return (
     <main className="relative min-h-screen">
       <ShaderBackground />
 
       <div className="relative z-10">
-        {authReady && sessionUser && (
-          <div className="mx-auto flex max-w-7xl justify-end px-6 pt-4">
-            <div className="flex items-center gap-3 rounded-full border border-white/60 bg-white/80 px-4 py-2 text-sm shadow-sm backdrop-blur">
-              <span className="text-slate-700">Signed in as {sessionUser.name}</span>
-              <Button type="button" size="sm" onClick={() => router.push("/dashboard")} className="rounded-full bg-slate-950 px-4 text-white">
-                Dashboard
-              </Button>
-              <Button type="button" size="sm" variant="outline" onClick={handleLogout} className="rounded-full px-4">
-                Logout
-              </Button>
-            </div>
-          </div>
-        )}
         <Navbar onApplyClick={handleApplyClick} />
         <HeroSection onApplyClick={handleApplyClick} />
         <FadeIn delay={0.1}>

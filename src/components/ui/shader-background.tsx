@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
 
 // Zoom factor for the visual pattern.
 const ZOOM_FACTOR = 0.3;
@@ -29,8 +30,8 @@ const NOISE_SWIRL_FACTOR = 0.2;
 // Number of fractal noise octaves in fbm (must be integer).
 const FBM_OCTAVES = 10;
 
-const ORANGE_START = [1.0, 0.54, 0.0]; // #ff8a00
-const ORANGE_END = [0.97, 0.45, 0.09]; // #f97316
+const ORANGE_START = [1.0, 0.76, 0.43]; // #ffc26e
+const ORANGE_END = [0.99, 0.63, 0.19]; // #fda130
 
 // 20-step palette based on the login/signup orange button.
 const orangeColors = [
@@ -249,7 +250,15 @@ function createShaderProgram(
   return program;
 }
 
-export default function ShaderBackground() {
+export default function ShaderBackground({
+  className = "",
+  canvasClassName = "",
+  canvasStyle,
+}: {
+  className?: string;
+  canvasClassName?: string;
+  canvasStyle?: CSSProperties;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -357,13 +366,14 @@ export default function ShaderBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 h-full w-full pointer-events-none">
+    <div className={`fixed inset-0 z-0 h-full w-full pointer-events-none ${className}`}>
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 h-full w-full"
+        className={`absolute inset-0 h-full w-full ${canvasClassName}`}
         style={{
           background:
-            "radial-gradient(circle at 20% 20%, rgba(255,244,220,0.55), transparent 35%), linear-gradient(135deg, #ff8a00 0%, #f97316 100%)",
+            "radial-gradient(circle at 20% 20%, rgba(255,248,235,0.75), transparent 35%), linear-gradient(135deg, #ffd7a1 0%, #fdb86b 55%, #fb923c 100%)",
+          ...canvasStyle,
         }}
       />
     </div>
