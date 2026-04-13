@@ -1,0 +1,6 @@
+export { ApplicationWorkspace } from "./application-workspace"
+export { DisbursalWorkspace } from "./disbursal-workspace"
+export { OfferWorkspace } from "./offer-workspace"
+export { OverviewWorkspace } from "./overview-workspace"
+export { ProfileWorkspace } from "./profile-workspace"
+export { RepaymentWorkspace } from "./repayment-workspace"
