@@ -2,34 +2,81 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { startTransition, useEffect, useMemo, useRef, useState } from "react"
+import { startTransition, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { AnimatePresence, motion } from "framer-motion"
 import {
+  ArrowUpRight,
+  BadgeCheck,
+  Banknote,
   Bell,
-  CalendarClock,
-  CheckCircle2,
+  ChevronDown,
   ChevronRight,
+  CreditCard,
   FileText,
   HandCoins,
-  Landmark,
   LayoutDashboard,
-  Menu,
+  MoreHorizontal,
   PencilLine,
   PiggyBank,
   Search,
+  Send,
+  Settings2,
   SlidersHorizontal,
   Sparkles,
-  TrendingUp,
-  Upload,
   X,
+  Wallet,
+  Clock3,
 } from "lucide-react"
 
-import { BackgroundPaths } from "@/components/ui/background-paths"
 import { Button } from "@/components/ui/button"
 
 type PageId = "overview" | "application" | "offer-studio" | "disbursal" | "repayment-plan" | "profile"
-type Accent = "sky" | "mint" | "peach" | "violet"
+
+type StoredProfile = {
+  profile?: {
+    fullName: string
+    mobile: string
+    email: string
+    city: string
+    employer: string
+    income: number
+    score: number
+    panCard: string
+    aadhaarCard: string
+    sanctionAmount: number
+    repaymentDate: string
+  }
+  account?: {
+    holder: string
+    bank: string
+    accountNumber: string
+    ifsc: string
+  }
+  application?: ApplicationForm
+  amount?: number
+  tenure?: number
+  profilePhoto?: string
+}
+
+type ApplicationForm = {
+  fullName: string
+  mobile: string
+  email: string
+  city: string
+  employmentType: string
+  employer: string
+  monthlyIncome: string
+  purpose: string
+  loanAmount: number
+  tenure: number
+  panCard: string
+  aadhaar: string
+  bankAccount: string
+  agreed: boolean
+  status: "draft" | "submitted"
+  submittedAt?: string
+  applicationId?: string
+}
 
 const money = (value: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -43,96 +90,77 @@ const navItems: Array<{
   label: string
   href: string
   icon: typeof LayoutDashboard
-  short: string
 }> = [
-  { id: "overview", label: "Overview", href: "/dashboard", icon: LayoutDashboard, short: "Home" },
-  { id: "application", label: "Application", href: "/dashboard/application", icon: FileText, short: "Details" },
-  { id: "offer-studio", label: "Offer Studio", href: "/dashboard/offer-studio", icon: SlidersHorizontal, short: "Offer" },
-  { id: "disbursal", label: "Disbursal", href: "/dashboard/disbursal", icon: HandCoins, short: "Transfer" },
-  { id: "repayment-plan", label: "Repayment Plan", href: "/dashboard/repayment-plan", icon: PiggyBank, short: "Pay" },
-  { id: "profile", label: "Client Profile", href: "/dashboard/profile", icon: PencilLine, short: "Profile" },
+  { id: "overview", label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { id: "application", label: "Application", href: "/dashboard/application", icon: FileText },
+  { id: "offer-studio", label: "Offer", href: "/dashboard/offer-studio", icon: SlidersHorizontal },
+  { id: "disbursal", label: "Disbursal", href: "/dashboard/disbursal", icon: HandCoins },
+  { id: "repayment-plan", label: "Repayment", href: "/dashboard/repayment-plan", icon: PiggyBank },
+  { id: "profile", label: "Profile", href: "/dashboard/profile", icon: PencilLine },
 ]
 
-const pageCopy: Record<PageId, { eyebrow: string; title: string; description: string; accent: Accent }> = {
+const pageCopy: Record<PageId, { title: string; description: string }> = {
   overview: {
-    eyebrow: "Loan Workspace",
-    title: "Everything important in one borrower hub.",
-    description: "Use this page to check readiness, move between steps, and keep the loan journey simple for the client.",
-    accent: "sky",
+    title: "Dashboard",
+    description: "A calm overview of your loan journey, current status, and the next action.",
   },
   application: {
-    eyebrow: "Application Form",
-    title: "Collect the borrower details cleanly.",
-    description: "A dedicated form page helps the client focus on submitting the right information before moving ahead.",
-    accent: "mint",
+    title: "Application",
+    description: "A compact place to review borrower details without extra clutter.",
   },
   "offer-studio": {
-    eyebrow: "Offer Studio",
-    title: "Adjust amount and tenure with clarity.",
-    description: "Use a focused studio page to tune the offer and show pricing impact without distraction.",
-    accent: "peach",
+    title: "Offer",
+    description: "Tune amount and tenure in a focused control card.",
   },
   disbursal: {
-    eyebrow: "Disbursal",
-    title: "Review the account and release funds.",
-    description: "Use this page to verify the bank destination and complete the final loan release.",
-    accent: "violet",
+    title: "Disbursal",
+    description: "Confirm the bank account and release the funds.",
   },
   "repayment-plan": {
-    eyebrow: "Repayment Plan",
-    title: "Make repayment easy to understand.",
-    description: "This page shows the comfort of the repayment plan so the borrower knows what to expect.",
-    accent: "sky",
+    title: "Repayment",
+    description: "Show the pay amount, QR, and due context in one place.",
   },
   profile: {
-    eyebrow: "Client Profile",
-    title: "View the full client profile in one place.",
-    description: "Keep all client and loan details visible in one read-only profile page while allowing only the photo to be updated.",
-    accent: "violet",
+    title: "Profile",
+    description: "Keep the KYC identity and account details easy to verify.",
   },
 }
 
-const accentStyles: Record<
-  Accent,
+const purposeOptions = ["Medical Emergency", "Salary Gap", "Home Expenses", "Travel", "Education", "Business", "Other"]
+const employmentOptions = ["Salaried", "Self-Employed", "Business Owner", "Freelancer"]
+
+const topActions = [
+  { label: "Search", icon: Search },
+  { label: "Alerts", icon: Bell },
+  { label: "Settings", icon: Settings2 },
+]
+
+const activityItems = [
   {
-    wash: string
-    chip: string
-    icon: string
-    panel: string
-    progress: string
-  }
-> = {
-  sky: {
-    wash: "from-[#fffaf5] via-[#fffefe] to-[#f5f7ff]",
-    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
-    icon: "bg-[#f6ede3] text-[#7a5c42]",
-    panel: "bg-[#faf4ed]",
-    progress: "from-[#f6b26b] to-[#d98a5e]",
+    title: "Application saved",
+    detail: "Identity and profile details",
+    amount: "Done",
+    icon: BadgeCheck,
   },
-  mint: {
-    wash: "from-[#f8f1e8] via-[#fffefe] to-[#f6fbf8]",
-    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
-    icon: "bg-[#f1e6db] text-[#7a5c42]",
-    panel: "bg-[#faf4ed]",
-    progress: "from-[#f4c489] to-[#ce9f73]",
+  {
+    title: "Offer updated",
+    detail: "Loan amount and tenure",
+    amount: "Live",
+    icon: Banknote,
   },
-  peach: {
-    wash: "from-[#fff8ef] via-[#fffdfa] to-[#fff4ea]",
-    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
-    icon: "bg-[#f8e8d7] text-[#855d35]",
-    panel: "bg-[#fbf2e7]",
-    progress: "from-[#f5bf7a] to-[#e18f57]",
+  {
+    title: "Bank verified",
+    detail: "Account and IFSC checked",
+    amount: "Queued",
+    icon: CreditCard,
   },
-  violet: {
-    wash: "from-[#fff9f2] via-[#fffefe] to-[#f9f4ef]",
-    chip: "border-[#e7ded5] bg-white/85 text-[#4f4338]",
-    icon: "bg-[#f7ece1] text-[#7b5b43]",
-    panel: "bg-[#faf3ea]",
-    progress: "from-[#f6c58d] to-[#d69167]",
+  {
+    title: "Repayment due",
+    detail: "UPI collection link ready",
+    amount: "Soon",
+    icon: Clock3,
   },
-}
-
-const repaymentBars = [60, 74, 68, 82, 62, 70, 66, 76]
+]
 
 function readStoredProfile() {
   if (typeof window === "undefined") {
@@ -145,33 +173,58 @@ function readStoredProfile() {
   }
 
   try {
-    return JSON.parse(stored) as {
-      profile?: {
-        fullName: string
-        mobile: string
-        email: string
-        city: string
-        employer: string
-        income: number
-        score: number
-        panCard: string
-        aadhaarCard: string
-        sanctionAmount: number
-        repaymentDate: string
-      }
-      account?: {
-        holder: string
-        bank: string
-        accountNumber: string
-        ifsc: string
-      }
-      amount?: number
-      tenure?: number
-      profilePhoto?: string
-    }
+    return JSON.parse(stored) as StoredProfile
   } catch {
     return null
   }
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("")
+}
+
+function buildPath(values: number[], width = 100, height = 44, padding = 4) {
+  if (!values.length) {
+    return ""
+  }
+
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const range = Math.max(max - min, 1)
+  const step = values.length > 1 ? (width - padding * 2) / (values.length - 1) : 0
+
+  return values
+    .map((value, index) => {
+      const x = padding + index * step
+      const normalized = (value - min) / range
+      const y = height - padding - normalized * (height - padding * 2)
+      return `${index === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`
+    })
+    .join(" ")
+}
+
+function Sparkline({
+  values,
+  stroke,
+  className = "",
+}: {
+  values: number[]
+  stroke: string
+  className?: string
+}) {
+  const path = useMemo(() => buildPath(values), [values])
+
+  return (
+    <svg viewBox="0 0 100 44" className={className} aria-hidden="true">
+      <path d={`${path} L 96 40 L 4 40 Z`} fill={stroke} fillOpacity="0.08" />
+      <path d={path} fill="none" stroke={stroke} strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
 function Card({
@@ -182,143 +235,73 @@ function Card({
   className?: string
 }) {
   return (
-    <div
-      className={`relative overflow-hidden rounded-[2rem] border border-[#e9ddd0] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,250,245,0.84))] p-6 shadow-[0_24px_80px_rgba(73,47,24,0.08)] backdrop-blur-xl ${className}`}
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.95),transparent)]" />
+    <div className={`rounded-[1.5rem] border border-[#f0d7bf] bg-white/96 shadow-[0_18px_55px_rgba(156,78,11,0.08)] backdrop-blur ${className}`}>
       {children}
     </div>
   )
 }
 
-function MetricCard({
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#bf6a22]">{children}</div>
+}
+
+const inputClassName =
+  "h-12 w-full rounded-[1rem] border border-[#f0cfb4] bg-[#fff8f2] px-4 text-[#201812] outline-none transition placeholder:text-[#b89883] focus:border-[#dd8b3d] focus:bg-white"
+
+function StatCard({
   label,
   value,
-  note,
-  tint,
+  delta,
+  color,
+  values,
 }: {
   label: string
   value: string
-  note: string
-  tint: string
+  delta: string
+  color: string
+  values: number[]
 }) {
   return (
-    <Card className={`relative overflow-hidden p-5 ${tint}`}>
-      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/45 blur-2xl" />
-      <div className="absolute inset-x-0 top-0 h-1.5 bg-white/90" />
-      <div className="text-[11px] uppercase tracking-[0.24em] text-[#8b7b6a]">{label}</div>
-      <div className="mt-3 text-3xl font-black tracking-tight text-[#1f1711]">{value}</div>
-      <div className="mt-1 text-sm text-[#75685d]">{note}</div>
-    </Card>
-  )
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#948271]">{children}</div>
-}
-
-function GlassTile({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return <div className={`rounded-[1.6rem] border border-[#eee2d5] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(251,245,238,0.82))] p-4 shadow-[0_10px_35px_rgba(117,88,57,0.06)] ${className}`}>{children}</div>
-}
-
-function StatPill({
-  label,
-  value,
-  tone = "light",
-}: {
-  label: string
-  value: string
-  tone?: "light" | "dark"
-}) {
-  const classes =
-    tone === "dark"
-      ? "border-[#1f1915] bg-[#181310] text-white"
-      : "border-[#eee2d5] bg-white/80 text-[#241c16]"
-
-  return (
-    <div className={`rounded-[1.35rem] border p-4 ${classes}`}>
-      <div className={`text-[11px] uppercase tracking-[0.22em] ${tone === "dark" ? "text-white/55" : "text-[#9a8979]"}`}>{label}</div>
-      <div className="mt-3 text-2xl font-black">{value}</div>
+    <div className="rounded-[1.35rem] border border-[#f1d8bf] bg-white p-4 shadow-[0_10px_30px_rgba(156,78,11,0.06)]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-[#bf6a22]">{label}</div>
+          <div className="mt-2 text-2xl font-black tracking-[-0.03em] text-[#201812]">{value}</div>
+        </div>
+        <Sparkline values={values} stroke={color} className="h-11 w-24 shrink-0 opacity-95" />
+      </div>
+      <div className="mt-3 flex items-center gap-1 text-sm font-semibold text-[#6f665f]">
+        <ArrowUpRight className="size-4 text-[#dd8b3d]" />
+        {delta}
+      </div>
     </div>
   )
 }
 
-const inputClassName =
-  "rounded-[1.2rem] border border-[#eadfce] bg-[linear-gradient(180deg,#fffdfa,#fbf5ee)] px-4 py-3 text-[#241c16] outline-none transition placeholder:text-[#af9d8d] focus:border-[#d8ad7a] focus:bg-white"
-
-function ActivityGuide({
-  accent,
+function ActivityRow({
   title,
-  text,
-  badge,
-  x,
-  y,
+  detail,
+  amount,
+  icon: Icon,
 }: {
-  accent: Accent
   title: string
-  text: string
-  badge: string
-  x: string
-  y: number
+  detail: string
+  amount: string
+  icon: typeof BadgeCheck
 }) {
-  const aura =
-    accent === "mint"
-      ? "from-emerald-200 to-teal-200"
-      : accent === "peach"
-        ? "from-amber-200 to-orange-200"
-        : accent === "violet"
-          ? "from-violet-200 to-fuchsia-200"
-          : "from-sky-200 to-cyan-200"
-
   return (
-    <Card className="overflow-hidden border-white/80 bg-white/84 p-4 backdrop-blur-xl">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-xl">
-          <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-            {badge}
-          </div>
-          <h3 className="mt-3 text-lg font-black text-slate-950">Loan journey companion</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            <span className="font-semibold text-slate-900">{title}</span> {text}
-          </p>
+    <div className="flex items-center justify-between gap-3 rounded-[1rem] border border-[#f1d8bf] bg-white px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-[0.95rem] bg-[#fff1e4] text-[#b85a12]">
+          <Icon className="size-4" />
         </div>
-
-        <div className="relative h-28 rounded-[1.6rem] border border-slate-100 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,250,252,0.9))] px-4">
-          <div className="absolute inset-x-4 bottom-5 h-2 rounded-full bg-slate-200/80" />
-          <motion.div
-            className="absolute bottom-7 left-4"
-            animate={{ x, y: [0, y, 0] }}
-            transition={{
-              x: { duration: 0.8, ease: "easeInOut" },
-              y: { duration: 1.8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
-            }}
-          >
-            <div className="relative">
-              <motion.div
-                className={`absolute -inset-2 rounded-full bg-gradient-to-br ${aura} opacity-70 blur-md`}
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
-              />
-              <div className="relative flex size-16 items-center justify-center rounded-[1.6rem] border border-white/80 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="block size-2 rounded-full bg-slate-900" />
-                    <span className="block size-2 rounded-full bg-slate-900" />
-                  </div>
-                  <div className="h-1.5 w-6 rounded-full bg-slate-900/80" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold text-[#241a13]">{title}</div>
+          <div className="truncate text-xs text-[#8b7c6f]">{detail}</div>
         </div>
       </div>
-    </Card>
+      <div className="shrink-0 text-sm font-semibold text-[#8d4710]">{amount}</div>
+    </div>
   )
 }
 
@@ -330,15 +313,35 @@ export default function BorrowerDashboard({
   user: { name: string; email: string; mobile: string; city?: string }
 }) {
   const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const storedProfile = readStoredProfile()
+
   const [amount, setAmount] = useState(storedProfile?.amount ?? 145000)
   const [tenure, setTenure] = useState(storedProfile?.tenure ?? 84)
-  const [disbursing, setDisbursing] = useState(false)
   const [funded, setFunded] = useState(false)
-  const [profilePhoto, setProfilePhoto] = useState(storedProfile?.profilePhoto ?? "")
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [profile, setProfile] = useState(
+  const [disbursing, setDisbursing] = useState(false)
+  const [showProfilePreview, setShowProfilePreview] = useState(false)
+  const [profilePhoto] = useState(storedProfile?.profilePhoto ?? "")
+  const [application, setApplication] = useState(
+    storedProfile?.application ?? {
+      fullName: user.name,
+      mobile: user.mobile,
+      email: user.email,
+      city: user.city || "",
+      employmentType: "",
+      employer: "",
+      monthlyIncome: "",
+      purpose: "",
+      loanAmount: storedProfile?.amount ?? 25000,
+      tenure: storedProfile?.tenure ?? 30,
+      panCard: "",
+      aadhaar: "",
+      bankAccount: "",
+      agreed: false,
+      status: "draft" as const,
+    }
+  )
+  const [applicationErrors, setApplicationErrors] = useState<Partial<Record<keyof ApplicationForm, string>>>({})
+  const [profile] = useState(
     storedProfile?.profile ?? {
       fullName: user.name,
       mobile: user.mobile,
@@ -366,8 +369,31 @@ export default function BorrowerDashboard({
   const interest = Math.round(amount * 0.0175 * (tenure / 30))
   const totalPayable = amount + interest + fee
   const monthlyRepayment = Math.round(totalPayable / Math.max(1, tenure / 30))
-  const utilization = useMemo(() => Math.min(100, Math.round((amount / 180000) * 100)), [amount])
   const repaymentAmount = Math.max(500, Math.round(monthlyRepayment))
+  const utilization = Math.min(100, Math.round((amount / 180000) * 100))
+  const activeIndex = navItems.findIndex((item) => item.id === activePage)
+  const nextNavItem = navItems[activeIndex + 1] ?? navItems[activeIndex]
+  const copy = pageCopy[activePage]
+  const applicationSubmitted = application.status === "submitted"
+
+  const completedSteps = useMemo(
+    () => ({
+      application: applicationSubmitted,
+      identity: profile.fullName.trim().length > 3 && profile.mobile.trim().length >= 10 && profile.email.includes("@"),
+      profile: profile.city.trim().length > 1 && profile.employer.trim().length > 2 && profile.income >= 25000,
+      offer: amount >= 50000 && tenure >= 60,
+      bank: account.holder.trim().length > 2 && account.bank.trim().length > 2 && account.accountNumber.trim().length >= 8 && account.ifsc.trim().length >= 5,
+      funded,
+    }),
+    [account.accountNumber, account.bank, account.holder, account.ifsc, amount, applicationSubmitted, funded, profile.city, profile.email, profile.employer, profile.fullName, profile.income, profile.mobile, tenure]
+  )
+
+  const stepCount = Object.values(completedSteps).filter(Boolean).length
+  const stepTotal = Object.keys(completedSteps).length
+  const progress = Math.round((stepCount / stepTotal) * 100)
+  const points = stepCount * 100
+  const canRedeem = points >= 500
+
   const upiPaymentUrl = useMemo(() => {
     const params = new URLSearchParams({
       pa: "qualoan@upi",
@@ -379,28 +405,20 @@ export default function BorrowerDashboard({
     return `upi://pay?${params.toString()}`
   }, [profile.fullName, repaymentAmount])
 
-  const completedSteps = useMemo(
-    () => ({
-      identity: profile.fullName.trim().length > 3 && profile.mobile.trim().length >= 10 && profile.email.includes("@"),
-      profile: profile.city.trim().length > 1 && profile.employer.trim().length > 2 && profile.income >= 25000,
-      offer: amount >= 50000 && tenure >= 60,
-      bank: account.holder.trim().length > 2 && account.bank.trim().length > 2 && account.accountNumber.trim().length >= 8 && account.ifsc.trim().length >= 5,
-      funded,
-    }),
-    [account.accountNumber, account.bank, account.holder, account.ifsc, amount, funded, profile.city, profile.email, profile.employer, profile.fullName, profile.income, profile.mobile, tenure]
-  )
+  const chartPrimary = useMemo(() => {
+    const scale = 0.9 + amount / 260000
+    return [20, 28, 24, 31, 29, 38, 34].map((value, index) => Math.round(value * scale + (funded ? index % 2 : 0)))
+  }, [amount, funded])
 
-  const completion = Math.round((Object.values(completedSteps).filter(Boolean).length / 5) * 100)
-  const points = useMemo(() => {
-    let total = 0
-    if (completedSteps.identity) total += 100
-    if (completedSteps.profile) total += 100
-    if (completedSteps.offer) total += 100
-    if (completedSteps.bank) total += 100
-    if (completedSteps.funded) total += 100
-    return total
-  }, [completedSteps.bank, completedSteps.funded, completedSteps.identity, completedSteps.offer, completedSteps.profile])
-  const canRedeem = points >= 500
+  const chartSecondary = useMemo(() => {
+    const scale = 0.84 + tenure / 260
+    return [16, 21, 19, 22, 23, 26, 24].map((value) => Math.round(value * scale))
+  }, [tenure])
+
+  const heroPrimaryPath = useMemo(() => buildPath(chartPrimary, 112, 64, 6), [chartPrimary])
+  const heroSecondaryPath = useMemo(() => buildPath(chartSecondary, 112, 64, 6), [chartSecondary])
+  const applicationAmount = application.loanAmount || amount
+  const applicationTenure = application.tenure || tenure
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -408,20 +426,13 @@ export default function BorrowerDashboard({
       JSON.stringify({
         profile,
         account,
+        application,
         amount,
         tenure,
         profilePhoto,
       })
     )
-  }, [account, amount, profile, profilePhoto, tenure])
-
-  const handleDisbursal = () => {
-    setDisbursing(true)
-    window.setTimeout(() => {
-      setDisbursing(false)
-      setFunded(true)
-    }, 1500)
-  }
+  }, [account, amount, application, profile, profilePhoto, tenure])
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" })
@@ -431,996 +442,1032 @@ export default function BorrowerDashboard({
     })
   }
 
+  const handleDisbursal = () => {
+    setDisbursing(true)
+    window.setTimeout(() => {
+      setDisbursing(false)
+      setFunded(true)
+    }, 1200)
+  }
+
   const goToPage = (path: string) => {
     startTransition(() => {
       router.push(path)
     })
   }
 
-  const copy = pageCopy[activePage]
-  const accent = accentStyles[copy.accent]
-  const activeIndex = navItems.findIndex((item) => item.id === activePage)
-  const nextNavItem = navItems[activeIndex + 1] ?? navItems[activeIndex]
-  const guideState: Record<PageId, { title: string; text: string; badge: string; x: string; y: number }> = {
-    overview: {
-      title: "Scout mode:",
-      text: "the guide is surveying the borrower hub and pointing the client toward the next unlocked step.",
-      badge: "Hub Check",
-      x: "18%",
-      y: -6,
-    },
-    application: {
-      title: "Form mode:",
-      text: "the guide is hovering near the details section and cheering the client on while they complete personal information.",
-      badge: "Details Run",
-      x: "34%",
-      y: -10,
-    },
-    "offer-studio": {
-      title: "Offer mode:",
-      text: "the guide is tuning the amount and tenure sliders like a control deck to help shape the best loan fit.",
-      badge: "Offer Lab",
-      x: "52%",
-      y: -8,
-    },
-    disbursal: {
-      title: "Transfer mode:",
-      text: "the guide is moving toward the bank release area to verify the account before the funds are sent.",
-      badge: "Bank Gate",
-      x: "70%",
-      y: -6,
-    },
-    "repayment-plan": {
-      title: "Repayment mode:",
-      text: "the guide is standing by the payment zone so the client can scan the QR and finish the next action smoothly.",
-      badge: "Pay Zone",
-      x: "82%",
-      y: -10,
-    },
-    profile: {
-      title: "Profile mode:",
-      text: "the guide is guarding the read-only KYC vault while still letting the client update their profile picture.",
-      badge: "Profile Vault",
-      x: "60%",
-      y: -5,
-    },
+  const updateApplication = <K extends keyof ApplicationForm>(key: K, value: ApplicationForm[K]) => {
+    setApplication((current) => ({ ...current, [key]: value }))
+    setApplicationErrors((current) => ({ ...current, [key]: "" }))
   }
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) {
+
+  const submitApplication = () => {
+    const nextErrors: Partial<Record<keyof ApplicationForm, string>> = {}
+
+    if (!application.fullName.trim()) nextErrors.fullName = "Required"
+    if (!application.mobile.trim() || application.mobile.trim().length < 10) nextErrors.mobile = "Valid mobile required"
+    if (!application.email.trim() || !application.email.includes("@")) nextErrors.email = "Valid email required"
+    if (!application.city.trim()) nextErrors.city = "Required"
+    if (!application.employmentType.trim()) nextErrors.employmentType = "Select employment type"
+    if (!application.employer.trim()) nextErrors.employer = "Enter employer or business name"
+    if (!application.monthlyIncome.trim() || Number(application.monthlyIncome) < 10000) nextErrors.monthlyIncome = "Minimum monthly income is ₹10,000"
+    if (!application.purpose.trim()) nextErrors.purpose = "Select a purpose"
+    if (application.loanAmount < 10000) nextErrors.loanAmount = "Minimum amount is ₹10,000"
+    if (application.tenure < 30) nextErrors.tenure = "Minimum tenure is 30 days"
+    if (!application.panCard.trim() || application.panCard.trim().length !== 10) nextErrors.panCard = "Valid PAN required"
+    if (!application.aadhaar.trim() || application.aadhaar.trim().length !== 12) nextErrors.aadhaar = "Valid Aadhaar required"
+    if (!application.bankAccount.trim() || application.bankAccount.trim().length < 8) nextErrors.bankAccount = "Bank account required"
+    if (!application.agreed) nextErrors.agreed = "Accept the terms to continue"
+
+    setApplicationErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setProfilePhoto(reader.result)
-      }
+    setApplication((current) => ({
+      ...current,
+      status: "submitted",
+      submittedAt: new Date().toISOString(),
+      applicationId: current.applicationId || `APP-${Date.now().toString().slice(-6)}`,
+    }))
+
+    const submittedApplication = {
+      ...application,
+      status: "submitted" as const,
+      submittedAt: new Date().toISOString(),
+      applicationId: application.applicationId || `APP-${Date.now().toString().slice(-6)}`,
     }
-    reader.readAsDataURL(file)
+    window.localStorage.setItem(
+      "qualoan-client-profile",
+      JSON.stringify({
+        profile,
+        account,
+        application: submittedApplication,
+        amount,
+        tenure,
+        profilePhoto,
+      })
+    )
+
+    startTransition(() => {
+      router.push("/dashboard/offer-studio")
+    })
   }
 
-  const renderOverviewPage = () => (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-        <MetricCard label="Eligible amount" value={money(180000)} note="Pre-approved limit" tint="bg-gradient-to-br from-[#fff8ef] via-white to-[#fff3e4]" />
-        <MetricCard label="Selected offer" value={money(amount)} note={`${tenure} day plan`} tint="bg-gradient-to-br from-[#f8f3ec] via-white to-[#fdf7ef]" />
-        <MetricCard label="Reward points" value={`${points}`} note={canRedeem ? "Ready to redeem" : "Target 500"} tint="bg-gradient-to-br from-[#fffaf1] via-white to-[#f8eee2]" />
-        <MetricCard label="Disbursal" value={funded ? "Released" : "Pending"} note={funded ? "Completed" : "Waiting"} tint="bg-gradient-to-br from-[#fff6ef] via-white to-[#f7efe9]" />
-      </div>
+  const renderPageWorkspace = () => {
+    if (activePage === "overview") {
+      return (
+        <Card className="p-0">
+          <div className="flex items-start justify-between gap-4 border-b border-[#eee6da] px-5 py-4">
+            <div>
+              <Eyebrow>Journey</Eyebrow>
+              <h3 className="mt-2 text-lg font-black text-[#201812]">Continue from here</h3>
+            </div>
+            <div className="rounded-full bg-[#d86c1e] px-3 py-1 text-xs font-semibold text-white">{progress}%</div>
+          </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_390px]">
-        <Card className="overflow-hidden">
-          <div className="rounded-[1.8rem] border border-[#efe3d8] bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(250,244,237,0.92))] p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <SectionLabel>Journey steps</SectionLabel>
-                <h2 className="mt-2 text-2xl font-black text-[#241c16]">Move through the loan process</h2>
+          <div className="grid gap-4 p-5 md:grid-cols-[minmax(0,1.1fr)_320px]">
+            <div className="rounded-[1.25rem] bg-[#fff4ea] p-4">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Current stage</div>
+              <div className="mt-2 text-2xl font-black text-[#201812]">{navItems[activeIndex]?.label}</div>
+              <p className="mt-2 text-sm leading-6 text-[#6f6358]">{copy.description}</p>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  onClick={() => goToPage(completedSteps.application ? nextNavItem.href : "/dashboard/application")}
+                  className="rounded-full bg-[#d86c1e] px-5 text-white hover:bg-[#c85f16]"
+                >
+                  {completedSteps.application ? "Continue" : "Start application"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowProfilePreview(true)}
+                  className="rounded-full border-[#f0d7bf] bg-white px-5"
+                >
+                  Open profile
+                </Button>
               </div>
-              <div className={`rounded-full border px-4 py-2 text-sm font-medium ${accent.chip}`}>{completion}% complete</div>
+            </div>
+
+            <div className="rounded-[1.25rem] border border-[#f0d7bf] bg-white p-4">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Checklist</div>
+              <div className="mt-3 space-y-2">
+                {[
+                  { label: "Application", done: completedSteps.application },
+                  { label: "Identity", done: completedSteps.identity },
+                  { label: "Profile", done: completedSteps.profile },
+                  { label: "Offer", done: completedSteps.offer },
+                  { label: "Bank", done: completedSteps.bank },
+                  { label: "Funds", done: completedSteps.funded },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between rounded-[1rem] border border-[#efe6dc] px-4 py-3">
+                    <span className="text-sm text-[#584b40]">{item.label}</span>
+                    <span className={`text-xs font-semibold ${item.done ? "text-emerald-700" : "text-slate-500"}`}>{item.done ? "Done" : "Pending"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )
+    }
+
+    if (activePage === "application") {
+      return (
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_330px]">
+          <Card className="p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Eyebrow>Application</Eyebrow>
+                <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[#201812]">Client loan application</h3>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6f6358]">
+                  Fill this once, save it, and continue the journey into offer, disbursal, and repayment.
+                </p>
+              </div>
+              <div className="rounded-full bg-[#d86c1e] px-3 py-1 text-xs font-semibold text-white">
+                {applicationSubmitted ? "Submitted" : "Draft"}
+              </div>
+            </div>
+
+            {applicationSubmitted && (
+              <div className="mt-5 rounded-[1.25rem] border border-[#f0d7bf] bg-[#fff4ea] p-4">
+                <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Application status</div>
+                <div className="mt-2 text-lg font-black text-[#201812]">
+                  Submitted {application.applicationId ? `• ${application.applicationId}` : ""}
+                </div>
+                <p className="mt-2 text-sm leading-6 text-[#6f6358]">
+                  The application is ready for offer processing. You can still edit it below if anything changes.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 grid gap-6">
+              <section className="grid gap-4 rounded-[1.35rem] border border-[#f0d7bf] bg-[#fffaf6] p-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c86a18]">Personal</div>
+                </div>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Full name
+                  <input value={application.fullName} onChange={(event) => updateApplication("fullName", event.target.value)} className={inputClassName} />
+                  {applicationErrors.fullName && <span className="text-xs text-red-600">{applicationErrors.fullName}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Mobile
+                  <input value={application.mobile} onChange={(event) => updateApplication("mobile", event.target.value)} className={inputClassName} />
+                  {applicationErrors.mobile && <span className="text-xs text-red-600">{applicationErrors.mobile}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Email
+                  <input value={application.email} onChange={(event) => updateApplication("email", event.target.value)} className={inputClassName} />
+                  {applicationErrors.email && <span className="text-xs text-red-600">{applicationErrors.email}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  City
+                  <input value={application.city} onChange={(event) => updateApplication("city", event.target.value)} className={inputClassName} />
+                  {applicationErrors.city && <span className="text-xs text-red-600">{applicationErrors.city}</span>}
+                </label>
+              </section>
+
+              <section className="grid gap-4 rounded-[1.35rem] border border-[#f0d7bf] bg-[#fffaf6] p-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c86a18]">Loan request</div>
+                </div>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Purpose
+                  <select value={application.purpose} onChange={(event) => updateApplication("purpose", event.target.value)} className={inputClassName}>
+                    <option value="">Select purpose</option>
+                    {purposeOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                  {applicationErrors.purpose && <span className="text-xs text-red-600">{applicationErrors.purpose}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Employment type
+                  <select value={application.employmentType} onChange={(event) => updateApplication("employmentType", event.target.value)} className={inputClassName}>
+                    <option value="">Select type</option>
+                    {employmentOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                  {applicationErrors.employmentType && <span className="text-xs text-red-600">{applicationErrors.employmentType}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Employer / business
+                  <input value={application.employer} onChange={(event) => updateApplication("employer", event.target.value)} className={inputClassName} />
+                  {applicationErrors.employer && <span className="text-xs text-red-600">{applicationErrors.employer}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Monthly income
+                  <input value={application.monthlyIncome} onChange={(event) => updateApplication("monthlyIncome", event.target.value)} className={inputClassName} inputMode="numeric" />
+                  {applicationErrors.monthlyIncome && <span className="text-xs text-red-600">{applicationErrors.monthlyIncome}</span>}
+                </label>
+                <div className="md:col-span-2 rounded-[1.25rem] bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.24em] text-[#c86a18]">Loan amount</div>
+                      <div className="mt-1 text-2xl font-black text-[#201812]">{money(applicationAmount)}</div>
+                    </div>
+                    <div className="text-sm font-semibold text-[#8d4710]">{applicationTenure} days</div>
+                  </div>
+                  <input
+                    type="range"
+                    min={10000}
+                    max={180000}
+                    step={5000}
+                    value={applicationAmount}
+                    onChange={(event) => updateApplication("loanAmount", Number(event.target.value))}
+                    className="mt-4 w-full"
+                  />
+                  {applicationErrors.loanAmount && <span className="mt-2 block text-xs text-red-600">{applicationErrors.loanAmount}</span>}
+
+                  <div className="mt-5 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.24em] text-[#c86a18]">Tenure</div>
+                      <div className="mt-1 text-2xl font-black text-[#201812]">{applicationTenure} days</div>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={30}
+                    max={180}
+                    step={6}
+                    value={applicationTenure}
+                    onChange={(event) => updateApplication("tenure", Number(event.target.value))}
+                    className="mt-4 w-full"
+                  />
+                  {applicationErrors.tenure && <span className="mt-2 block text-xs text-red-600">{applicationErrors.tenure}</span>}
+                </div>
+              </section>
+
+              <section className="grid gap-4 rounded-[1.35rem] border border-[#f0d7bf] bg-[#fffaf6] p-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c86a18]">KYC</div>
+                </div>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  PAN
+                  <input value={application.panCard} onChange={(event) => updateApplication("panCard", event.target.value.toUpperCase())} className={inputClassName} />
+                  {applicationErrors.panCard && <span className="text-xs text-red-600">{applicationErrors.panCard}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                  Aadhaar
+                  <input value={application.aadhaar} onChange={(event) => updateApplication("aadhaar", event.target.value)} className={inputClassName} />
+                  {applicationErrors.aadhaar && <span className="text-xs text-red-600">{applicationErrors.aadhaar}</span>}
+                </label>
+                <label className="grid gap-2 text-sm font-medium text-[#5f5247] md:col-span-2">
+                  Bank account
+                  <input value={application.bankAccount} onChange={(event) => updateApplication("bankAccount", event.target.value)} className={inputClassName} />
+                  {applicationErrors.bankAccount && <span className="text-xs text-red-600">{applicationErrors.bankAccount}</span>}
+                </label>
+              </section>
+
+              <label className="flex items-start gap-3 rounded-[1.35rem] border border-[#f0d7bf] bg-[#fff4ea] p-4 text-sm text-[#5f5247]">
+                <input
+                  type="checkbox"
+                  checked={application.agreed}
+                  onChange={(event) => updateApplication("agreed", event.target.checked)}
+                  className="mt-1 size-4 rounded border-[#d9b38a]"
+                />
+                <span>
+                  I confirm that the details above are accurate and I agree to the loan checks and repayment terms.
+                  {applicationErrors.agreed && <span className="mt-2 block text-xs text-red-600">{applicationErrors.agreed}</span>}
+                </span>
+              </label>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button type="button" onClick={submitApplication} className="rounded-full bg-[#d86c1e] px-5 text-white hover:bg-[#c85f16]">
+                {applicationSubmitted ? "Update application" : "Submit application"}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => goToPage("/dashboard")} className="rounded-full border-[#f0d7bf] bg-white px-5">
+                Back
+              </Button>
+            </div>
+          </Card>
+
+          <Card className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <Eyebrow>Application status</Eyebrow>
+                <h4 className="mt-2 text-xl font-black text-[#201812]">Live snapshot</h4>
+              </div>
+              <div className="rounded-full bg-[#d86c1e] px-3 py-1 text-xs font-semibold text-white">
+                {applicationSubmitted ? "Ready" : "Draft"}
+              </div>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-[1.6rem] bg-[#fff4ea] p-5 shadow-[0_12px_35px_rgba(156,78,11,0.06)]">
+              <div className="flex items-center gap-4">
+                <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-[#ffe2c9] text-3xl font-black text-[#9e520f]">
+                  {initials(application.fullName || profile.fullName)}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-2xl font-black tracking-[-0.03em] text-[#201812]">{application.fullName || profile.fullName}</div>
+                  <div className="truncate text-sm text-[#6f6358]">{application.email || profile.email}</div>
+                  <div className="mt-2 text-xs uppercase tracking-[0.22em] text-[#c86a18]">
+                    {applicationSubmitted ? "Submitted application" : "Draft application"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[1.15rem] bg-white p-4">
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Requested amount</div>
+                  <div className="mt-2 text-xl font-black text-[#201812]">{money(applicationAmount)}</div>
+                </div>
+                <div className="rounded-[1.15rem] bg-white p-4">
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Requested tenure</div>
+                  <div className="mt-2 text-xl font-black text-[#201812]">{applicationTenure} days</div>
+                </div>
+                <div className="rounded-[1.15rem] bg-white p-4">
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Purpose</div>
+                  <div className="mt-2 text-sm font-semibold text-[#201812]">{application.purpose || "Not selected"}</div>
+                </div>
+                <div className="rounded-[1.15rem] bg-white p-4">
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Next step</div>
+                  <div className="mt-2 text-sm font-semibold text-[#201812]">Offer review</div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-[1.15rem] border border-dashed border-[#f0d7bf] bg-white p-4">
+                <div className="text-sm font-semibold text-[#241a13]">Your application will drive the rest of the loan journey.</div>
+                <div className="mt-2 text-sm leading-6 text-[#6f6358]">
+                  Once submitted, the offer and disbursal steps can be continued from the dashboard menu.
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )
+    }
+
+    if (activePage === "offer-studio") {
+      return (
+        <Card>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <Eyebrow>Offer</Eyebrow>
+              <h3 className="mt-2 text-xl font-black text-[#201812]">Amount and tenure</h3>
+            </div>
+            <div className="rounded-full bg-[#d86c1e] px-3 py-1 text-xs font-semibold text-white">{utilization}% utilization</div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-[1.2rem] bg-[#fff4ea] p-4">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Amount</div>
+              <div className="mt-2 text-3xl font-black text-[#201812]">{money(amount)}</div>
+              <input type="range" min={10000} max={180000} step={5000} value={amount} onChange={(event) => setAmount(Number(event.target.value))} className="mt-5 w-full" />
+            </div>
+
+            <div className="rounded-[1.2rem] bg-[#fff4ea] p-4">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Tenure</div>
+              <div className="mt-2 text-3xl font-black text-[#201812]">{tenure} days</div>
+              <input type="range" min={30} max={150} step={6} value={tenure} onChange={(event) => setTenure(Number(event.target.value))} className="mt-5 w-full" />
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="rounded-[1rem] border border-[#f0d7bf] px-4 py-3">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Interest</div>
+              <div className="mt-2 text-xl font-bold text-[#201812]">{money(interest)}</div>
+            </div>
+            <div className="rounded-[1rem] border border-[#f0d7bf] px-4 py-3">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Fee</div>
+              <div className="mt-2 text-xl font-bold text-[#201812]">{money(fee)}</div>
+            </div>
+            <div className="rounded-[1rem] border border-[#f0d7bf] px-4 py-3">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Total</div>
+              <div className="mt-2 text-xl font-bold text-[#201812]">{money(totalPayable)}</div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button type="button" onClick={() => goToPage("/dashboard/disbursal")} className="rounded-full bg-[#d86c1e] px-5 text-white hover:bg-[#c85f16]">
+              Continue to disbursal
+            </Button>
+            <Button type="button" variant="outline" onClick={() => goToPage("/dashboard")} className="rounded-full border-[#f0d7bf] bg-white px-5">
+              Back
+            </Button>
+          </div>
+        </Card>
+      )
+    }
+
+    if (activePage === "disbursal") {
+      return (
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_320px]">
+          <Card>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Eyebrow>Disbursal</Eyebrow>
+                <h3 className="mt-2 text-xl font-black text-[#201812]">Bank verification</h3>
+              </div>
+              <div className="rounded-full bg-[#d86c1e] px-3 py-1 text-xs font-semibold text-white">{funded ? "Released" : "Pending"}</div>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                Account holder
+                <input value={account.holder} onChange={(event) => setAccount((current) => ({ ...current, holder: event.target.value }))} className={inputClassName} />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                Bank name
+                <input value={account.bank} onChange={(event) => setAccount((current) => ({ ...current, bank: event.target.value }))} className={inputClassName} />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                Account number
+                <input value={account.accountNumber} onChange={(event) => setAccount((current) => ({ ...current, accountNumber: event.target.value }))} className={inputClassName} />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-[#5f5247]">
+                IFSC code
+                <input value={account.ifsc} onChange={(event) => setAccount((current) => ({ ...current, ifsc: event.target.value }))} className={inputClassName} />
+              </label>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button type="button" onClick={handleDisbursal} disabled={disbursing || funded} className="rounded-full bg-[#d86c1e] px-5 text-white hover:bg-[#c85f16]">
+                {disbursing ? "Processing..." : funded ? "Disbursed" : "Release funds"}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => goToPage("/dashboard/repayment-plan")} className="rounded-full border-[#f0d7bf] bg-white px-5">
+                View repayment
+              </Button>
+            </div>
+          </Card>
+
+          <Card>
+            <Eyebrow>Readiness</Eyebrow>
+            <h3 className="mt-2 text-xl font-black text-[#201812]">Checklist</h3>
+            <div className="mt-4 space-y-2">
               {[
-                {
-                  title: "Complete application",
-                  text: "Fill identity, city, employer, and income details before proceeding.",
-                  href: "/dashboard/application",
-                  done: completedSteps.identity && completedSteps.profile,
-                },
-                {
-                  title: "Tune the offer",
-                  text: "Choose the amount and tenure that best fits the borrower.",
-                  href: "/dashboard/offer-studio",
-                  done: completedSteps.offer,
-                },
-                {
-                  title: "Add bank account",
-                  text: "Review and confirm the account that will receive the disbursal.",
-                  href: "/dashboard/disbursal",
-                  done: completedSteps.bank,
-                },
-                {
-                  title: "Check repayment",
-                  text: "Review the monthly repayment comfort before releasing funds.",
-                  href: "/dashboard/repayment-plan",
-                  done: completedSteps.funded,
-                },
-              ].map((item) => (
-                <GlassTile key={item.title} className="relative overflow-hidden p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-semibold text-[#241c16]">{item.title}</div>
-                      <p className="mt-2 max-w-[20rem] text-sm leading-6 text-[#75685d]">{item.text}</p>
-                    </div>
-                    <div className={`relative z-10 shrink-0 rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-[#f7ede2] text-[#8a6545]"}`}>
-                      {item.done ? "Done" : "Open"}
-                    </div>
+                { label: "Offer selected", done: completedSteps.offer },
+                { label: "Bank verified", done: completedSteps.bank },
+                { label: "Funds released", done: completedSteps.funded },
+              ].map((item, index) => (
+                <div key={item.label} className="flex items-center justify-between rounded-[1rem] border border-[#efe6dc] px-4 py-3">
+                  <div className="flex items-center gap-3">
+                <div className="flex size-8 items-center justify-center rounded-full bg-[#ffe2c9] text-xs font-bold text-[#9e520f]">{index + 1}</div>
+                    <span className="text-sm text-[#584b40]">{item.label}</span>
                   </div>
-                  <div className="relative z-10 mt-6 flex items-center justify-between gap-4">
-                    <div className="text-xs uppercase tracking-[0.2em] text-[#aa9684]">{item.done ? "Completed checkpoint" : "Next available step"}</div>
-                    <Button type="button" variant="outline" onClick={() => goToPage(item.href)} className="shrink-0 rounded-full border-[#eadfce] bg-white/90 px-4">
-                      Open
-                    </Button>
-                  </div>
-                </GlassTile>
+                  <span className={`text-xs font-semibold ${item.done ? "text-emerald-700" : "text-slate-500"}`}>{item.done ? "Done" : "Pending"}</span>
+                </div>
               ))}
             </div>
-          </div>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
-            <SectionLabel>Reward system</SectionLabel>
-            <h2 className="mt-2 text-2xl font-black text-white">Points and redemption</h2>
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-              <motion.div className={`h-full rounded-full bg-gradient-to-r ${accent.progress}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, (points / 500) * 100)}%` }} />
-            </div>
-            <div className="mt-3 flex items-center justify-between text-sm text-white/65">
-              <span>{points} points earned</span>
-              <span>{Math.max(0, 500 - points)} to unlock</span>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <StatPill label="Completion" value={`${completion}%`} tone="dark" />
-              <StatPill label="Reward target" value="500" tone="dark" />
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {[
-              { label: "Identity completed", earned: completedSteps.identity },
-              { label: "Profile completed", earned: completedSteps.profile },
-              { label: "Offer chosen", earned: completedSteps.offer },
-              { label: "Bank verified", earned: completedSteps.bank },
-              { label: "Loan disbursed", earned: completedSteps.funded },
-            ].map((item) => (
-              <GlassTile key={item.label} className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm text-[#5e5044]">{item.label}</span>
-                <span className={`text-xs font-semibold ${item.earned ? "text-emerald-700" : "text-slate-500"}`}>
-                  {item.earned ? "+100 earned" : "+100 pending"}
-                </span>
-              </GlassTile>
-            ))}
-          </div>
-
-          <div className={`mt-5 rounded-[1.7rem] border px-5 py-5 ${canRedeem ? "border-emerald-200 bg-emerald-50" : "border-[#ead8c5] bg-[#fff5e8]"}`}>
-            <div className="font-semibold text-[#241c16]">{canRedeem ? "Reward unlocked" : "Redemption locked"}</div>
-            <p className="mt-1 text-sm leading-6 text-[#6e6054]">
-              {canRedeem
-                ? "The borrower has reached 500 points and can redeem a benefit like a fee waiver, cashback, or priority support."
-                : "Borrowers unlock rewards once they complete all five steps and reach 500 points."}
-            </p>
-          </div>
-        </Card>
-      </div>
-    </div>
-  )
-
-  const renderApplicationPage = () => (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
-      <Card className="overflow-hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <SectionLabel>Application form</SectionLabel>
-            <h2 className="mt-2 text-2xl font-black text-[#1f1711]">Start the borrower application</h2>
-          </div>
-          <div className={`rounded-full border px-4 py-2 text-sm font-medium ${completedSteps.identity && completedSteps.profile ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
-            {completedSteps.identity && completedSteps.profile ? "+200 points earned" : "Earn up to 200 points"}
-          </div>
+          </Card>
         </div>
+      )
+    }
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
-            Full name
-            <input value={profile.fullName} onChange={(event) => setProfile((current) => ({ ...current, fullName: event.target.value }))} className={inputClassName} />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
-            Mobile
-            <input value={profile.mobile} onChange={(event) => setProfile((current) => ({ ...current, mobile: event.target.value }))} className={inputClassName} />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
-            Email
-            <input value={profile.email} onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))} className={inputClassName} />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
-            City
-            <input value={profile.city} onChange={(event) => setProfile((current) => ({ ...current, city: event.target.value }))} className={inputClassName} />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
-            Employer
-            <input value={profile.employer} onChange={(event) => setProfile((current) => ({ ...current, employer: event.target.value }))} className={inputClassName} />
-          </label>
-          <label className="grid gap-2 text-sm font-medium text-[#5e5044]">
-            Monthly income
-            <input
-              type="number"
-              min={0}
-              value={profile.income}
-              onChange={(event) => setProfile((current) => ({ ...current, income: Number(event.target.value) || 0 }))}
-              className={inputClassName}
-            />
-          </label>
-        </div>
+    if (activePage === "repayment-plan") {
+      return (
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_320px]">
+          <Card>
+            <Eyebrow>Repayment</Eyebrow>
+            <h3 className="mt-2 text-xl font-black text-[#201812]">Pay amount and QR</h3>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button type="button" onClick={() => goToPage("/dashboard/offer-studio")} className="rounded-full bg-slate-950 px-5 text-white">
-            Save and continue
-          </Button>
-          <Button type="button" variant="outline" onClick={() => goToPage("/dashboard")} className="rounded-full px-5">
-            Back to overview
-          </Button>
-        </div>
-      </Card>
-
-      <Card className="overflow-hidden">
-        <div className="rounded-[1.8rem] bg-[#181310] p-5 text-white">
-          <SectionLabel>Form status</SectionLabel>
-          <h2 className="mt-2 text-2xl font-black text-white">Application checkpoints</h2>
-        </div>
-        <div className="mt-5 space-y-3">
-          {[
-            { label: "Identity details complete", done: completedSteps.identity, points: 100 },
-            { label: "Profile and income complete", done: completedSteps.profile, points: 100 },
-          ].map((item) => (
-            <GlassTile key={item.label} className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="font-medium text-[#241c16]">{item.label}</div>
-                <div className={`rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
-                  {item.done ? "Complete" : "Pending"}
-                </div>
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="rounded-[1rem] bg-[#fff4ea] p-4">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Monthly outflow</div>
+                <div className="mt-2 text-xl font-bold text-[#201812]">{money(monthlyRepayment)}</div>
               </div>
-              <div className="mt-2 text-sm text-[#75685d]">{item.done ? `+${item.points} points earned` : `Complete this step to earn +${item.points} points`}</div>
-            </GlassTile>
-          ))}
-        </div>
-      </Card>
-    </div>
-  )
-
-  const renderOfferStudioPage = () => (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-      <Card className="overflow-hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <SectionLabel>Offer studio</SectionLabel>
-            <h2 className="mt-2 text-2xl font-black text-[#241c16]">Tune the amount and tenure</h2>
-          </div>
-          <div className={`rounded-full border px-4 py-2 text-sm font-medium ${accent.chip}`}>Utilization {utilization}%</div>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <GlassTile className="bg-[linear-gradient(135deg,rgba(255,255,255,0.85),rgba(249,241,231,0.95))] p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-[#9a8979]">Loan amount</div>
-            <motion.div key={amount} className="mt-3 text-4xl font-black text-[#241c16]" initial={{ opacity: 0.7, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }}>
-              {money(amount)}
-            </motion.div>
-            <input type="range" min={10000} max={180000} step={5000} value={amount} onChange={(event) => setAmount(Number(event.target.value))} className="mt-6 w-full" />
-            <div className="mt-2 flex justify-between text-xs text-[#9a8979]">
-              <span>₹10K</span>
-              <span>₹1.8L</span>
+              <div className="rounded-[1rem] bg-[#fff4ea] p-4">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">UPI</div>
+                <div className="mt-2 text-xl font-bold text-[#201812]">qualoan@upi</div>
+              </div>
+              <div className="rounded-[1rem] bg-[#fff4ea] p-4">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Status</div>
+                <div className="mt-2 text-xl font-bold text-[#201812]">{funded ? "Live" : "Waiting"}</div>
+              </div>
             </div>
-          </GlassTile>
 
-          <GlassTile className="bg-[linear-gradient(135deg,rgba(255,255,255,0.85),rgba(250,245,237,0.96))] p-5">
-            <div className="text-xs uppercase tracking-[0.22em] text-[#9a8979]">Repayment tenure</div>
-            <motion.div key={tenure} className="mt-3 text-4xl font-black text-[#241c16]" initial={{ opacity: 0.7, scale: 1.03 }} animate={{ opacity: 1, scale: 1 }}>
-              {tenure} days
-            </motion.div>
-            <input type="range" min={30} max={150} step={6} value={tenure} onChange={(event) => setTenure(Number(event.target.value))} className="mt-6 w-full" />
-            <div className="mt-2 flex justify-between text-xs text-[#9a8979]">
-              <span>30 days</span>
-              <span>150 days</span>
+            <div className="mt-6 flex justify-center rounded-[1.25rem] border border-[#f0d7bf] bg-[#fff6ef] p-4">
+              <Image
+                src={`/api/payment-qr?data=${encodeURIComponent(upiPaymentUrl)}`}
+                alt="QR code for loan repayment"
+                width={220}
+                height={220}
+                unoptimized
+                className="rounded-[1rem] border border-[#f0d7bf] bg-white p-2"
+              />
             </div>
-          </GlassTile>
-        </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {[
-            { label: "Interest", value: money(interest) },
-            { label: "Fee", value: money(fee) },
-            { label: "Total payable", value: money(totalPayable) },
-          ].map((item) => (
-            <StatPill key={item.label} label={item.label} value={item.value} />
-          ))}
-        </div>
-      </Card>
+            <p className="mt-4 text-sm leading-6 text-[#6f6358]">Scan from any UPI app to pay the current repayment amount directly.</p>
+          </Card>
 
-      <Card className="overflow-hidden">
-        <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
-          <SectionLabel>Offer result</SectionLabel>
-          <h2 className="mt-2 text-2xl font-black text-white">What this offer means</h2>
-          <p className="mt-2 text-sm leading-6 text-white/65">A cleaner summary of the amount impact before you move funds.</p>
+          <Card>
+            <Eyebrow>Repayment details</Eyebrow>
+            <h3 className="mt-2 text-xl font-black text-[#201812]">Pay now</h3>
+            <div className="mt-4 space-y-2">
+              <div className="rounded-[1rem] border border-[#f0d7bf] px-4 py-3">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Amount</div>
+                <div className="mt-2 text-xl font-bold text-[#201812]">{money(repaymentAmount)}</div>
+              </div>
+              <div className="rounded-[1rem] border border-[#f0d7bf] px-4 py-3">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Reference</div>
+                <div className="mt-2 text-xl font-bold text-[#201812]">{profile.fullName}</div>
+              </div>
+            </div>
+          </Card>
         </div>
-        <div className="mt-5 space-y-3">
-          <GlassTile>
-            <div className="text-sm text-[#8a7867]">Monthly repayment</div>
-            <div className="mt-2 text-3xl font-black text-[#241c16]">{money(monthlyRepayment)}</div>
-          </GlassTile>
-          <GlassTile>
-            <div className="text-sm text-[#8a7867]">Points for this step</div>
-            <div className="mt-2 text-lg font-semibold text-[#241c16]">{completedSteps.offer ? "+100 earned" : "+100 pending"}</div>
-          </GlassTile>
-          <Button type="button" onClick={() => goToPage("/dashboard/disbursal")} className="mt-2 w-full rounded-full bg-slate-950 text-white">
-            Continue to disbursal
-          </Button>
-        </div>
-      </Card>
-    </div>
-  )
+      )
+    }
 
-  const renderDisbursalPage = () => (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_390px]">
-      <div className="space-y-6">
-        <Card className="overflow-hidden p-0">
-          <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="bg-[#181310] px-6 py-7 text-white">
-              <SectionLabel>Disbursal hub</SectionLabel>
-              <h2 className="mt-2 text-3xl font-black text-white md:text-4xl">Release funds with one final bank check.</h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-white/70">
-                This section is now focused on a single action: verify the destination account, confirm readiness, and trigger the payout.
+    if (activePage === "profile") {
+      return (
+        <Card className="p-6">
+          <div className="flex flex-col items-start gap-5 rounded-[1.75rem] border border-dashed border-[#f0d7bf] bg-[#fff4ea] p-6 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-2xl">
+              <Eyebrow>Profile</Eyebrow>
+              <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[#201812]">Profile details now live in the login popup</h3>
+              <p className="mt-3 text-sm leading-6 text-[#6f6358]">
+                The detailed client identity card has been removed from the dashboard to keep this workspace focused. Click the round avatar in the auth popup to view the full profile.
               </p>
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                <StatPill label="Payout amount" value={money(amount)} tone="dark" />
-                <StatPill label="Service fee" value={money(fee)} tone="dark" />
-                <StatPill label="Status" value={funded ? "Released" : "Pending"} tone="dark" />
-              </div>
             </div>
 
-            <div className="bg-[linear-gradient(180deg,#fff9f2_0%,#f8ede0_100%)] px-6 py-7">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9a8979]">Live destination</div>
-                  <div className="mt-2 text-2xl font-black text-[#241c16]">{account.bank}</div>
-                </div>
-                <div className={`flex size-12 items-center justify-center rounded-[1.3rem] ${accent.icon}`}>
-                  <Landmark className="size-5" />
-                </div>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                <div className="rounded-[1.4rem] border border-[#eadfce] bg-white/80 px-4 py-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-[#9a8979]">Account ending</div>
-                  <div className="mt-2 text-3xl font-black text-[#241c16]">{account.accountNumber.slice(-4)}</div>
-                </div>
-                <div className="rounded-[1.4rem] border border-[#eadfce] bg-white/80 px-4 py-4">
-                  <div className="text-xs uppercase tracking-[0.2em] text-[#9a8979]">IFSC code</div>
-                  <div className="mt-2 text-xl font-semibold text-[#241c16]">{account.ifsc}</div>
-                </div>
-              </div>
+            <div className="flex size-28 items-center justify-center rounded-full bg-[#ffe2c9] text-4xl font-black text-[#9e520f] ring-8 ring-white shadow-[0_18px_40px_rgba(156,78,11,0.14)]">
+              {initials(profile.fullName)}
             </div>
           </div>
-        </Card>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <Card className="overflow-hidden">
-            <SectionLabel>Beneficiary details</SectionLabel>
-            <h3 className="mt-2 text-2xl font-black text-[#241c16]">Primary bank information</h3>
-            <div className="mt-6 grid gap-4">
-              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
-                Account holder
-            <input value={account.holder} onChange={(event) => setAccount((current) => ({ ...current, holder: event.target.value }))} className={inputClassName} />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
-                Bank name
-            <input value={account.bank} onChange={(event) => setAccount((current) => ({ ...current, bank: event.target.value }))} className={inputClassName} />
-              </label>
-            </div>
-          </Card>
-
-          <Card className="overflow-hidden">
-            <SectionLabel>Routing details</SectionLabel>
-            <h3 className="mt-2 text-2xl font-black text-[#241c16]">Transfer routing check</h3>
-            <div className="mt-6 grid gap-4">
-              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
-                Account number
-            <input value={account.accountNumber} onChange={(event) => setAccount((current) => ({ ...current, accountNumber: event.target.value }))} className={inputClassName} />
-              </label>
-              <label className="grid gap-2 text-sm font-medium text-[#5f5146]">
-                IFSC code
-            <input value={account.ifsc} onChange={(event) => setAccount((current) => ({ ...current, ifsc: event.target.value }))} className={inputClassName} />
-              </label>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      <div className="space-y-6">
-        <Card className="overflow-hidden">
-          <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
-            <SectionLabel>Release action</SectionLabel>
-            <h3 className="mt-2 text-2xl font-black text-white">Payout control rail</h3>
-            <p className="mt-2 text-sm leading-6 text-white/65">Use this side rail to confirm readiness and trigger the disbursal without scrolling through the form again.</p>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            <GlassTile>
-              <div className="text-sm text-[#8a7867]">Borrower</div>
-              <div className="mt-1 text-xl font-semibold text-[#241c16]">{profile.fullName}</div>
-            </GlassTile>
-            <GlassTile>
-              <div className="text-sm text-[#8a7867]">Destination bank</div>
-              <div className="mt-1 text-xl font-semibold text-[#241c16]">{account.bank}</div>
-            </GlassTile>
-            <GlassTile>
-              <div className="text-sm text-[#8a7867]">Release amount</div>
-              <div className="mt-1 text-3xl font-black text-[#241c16]">{money(amount)}</div>
-            </GlassTile>
-          </div>
-
-          <div className="mt-5 flex flex-col gap-3">
-            <Button type="button" onClick={handleDisbursal} disabled={disbursing || funded} className="h-12 rounded-full bg-[#17120f] text-white">
-              {disbursing ? "Processing..." : funded ? "Disbursed" : "Release funds"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => goToPage("/dashboard/repayment-plan")} className="h-12 rounded-full border-[#eadfce] bg-white">
-              View repayment
-            </Button>
-          </div>
-        </Card>
-
-        <Card>
-          <SectionLabel>Readiness checks</SectionLabel>
-          <h3 className="mt-2 text-2xl font-black text-[#241c16]">Before release</h3>
-          <div className="mt-5 space-y-3">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {[
-              { label: "Bank details added", done: completedSteps.bank },
-              { label: "Offer selected", done: completedSteps.offer },
-              { label: "Funds released", done: completedSteps.funded },
-            ].map((item, index) => (
-              <GlassTile key={item.label} className="flex items-center justify-between px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-8 items-center justify-center rounded-full bg-[#f7ede2] text-xs font-bold text-[#8a6545]">{index + 1}</div>
-                  <span className="text-sm text-[#5f5146]">{item.label}</span>
-                </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
-                  {item.done ? "Done" : "Pending"}
-                </span>
-              </GlassTile>
+              { label: "Dashboard profile", value: "Removed from this page" },
+              { label: "Profile photo", value: "Shown in popup" },
+              { label: "Client details", value: "Tap avatar to open" },
+              { label: "Photo upload", value: "Available in popup" },
+              { label: "Loan details", value: "Continue in other tabs" },
+              { label: "Navigation", value: "Still available on the left" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-[1rem] border border-[#f0d7bf] bg-white px-4 py-3">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">{item.label}</div>
+                <div className="mt-2 text-sm font-semibold text-[#201812]">{item.value}</div>
+              </div>
             ))}
           </div>
         </Card>
-      </div>
-    </div>
-  )
+      )
+    }
 
-  const renderRepaymentPage = () => (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-      <Card className="overflow-hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <SectionLabel>Repayment plan</SectionLabel>
-            <h2 className="mt-2 text-2xl font-black text-[#241c16]">Comfort over time</h2>
-          </div>
-          <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
-            <TrendingUp className="size-4" />
-            Stable
-          </div>
-        </div>
+    return null
+  }
 
-        <div className="mt-7 grid grid-cols-8 items-end gap-3 rounded-[1.8rem] border border-[#ece0d5] bg-[linear-gradient(180deg,rgba(255,255,255,0.85),rgba(248,241,234,0.95))] px-4 pb-4 pt-8">
-          {repaymentBars.map((height, index) => (
-            <motion.div
-              key={height}
-              className={`rounded-t-[1rem] bg-gradient-to-b ${accent.progress}`}
-              initial={{ height: 0 }}
-              animate={{ height }}
-              transition={{ delay: 0.04 * index, duration: 0.35 }}
-            />
-          ))}
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {[
-            { label: "Monthly outflow", value: money(monthlyRepayment), icon: CalendarClock },
-            { label: "Income cushion", value: `${Math.max(8, 100 - Math.round((monthlyRepayment / profile.income) * 100))}%`, icon: TrendingUp },
-            { label: "Suggested tenure", value: "78-96 days", icon: PiggyBank },
-          ].map((item) => {
-            const Icon = item.icon
-            return (
-              <GlassTile key={item.label} className="px-4 py-4">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-[#9a8979]">
-                  <span>{item.label}</span>
-                  <Icon className="size-4" />
-                </div>
-                <div className="mt-3 text-2xl font-black text-[#241c16]">{item.value}</div>
-              </GlassTile>
-            )
-          })}
-        </div>
-      </Card>
-
-      <Card className="overflow-hidden">
-        <div className="rounded-[1.8rem] bg-[#17120f] p-5 text-white">
-          <SectionLabel>Scan to pay</SectionLabel>
-          <h2 className="mt-2 text-2xl font-black text-white">Repayment QR</h2>
-          <p className="mt-2 text-sm leading-6 text-white/65">A cleaner pay panel that keeps the scan action obvious.</p>
-        </div>
-        <div className="mt-5 flex justify-center rounded-[1.6rem] border border-[#ece0d5] bg-[#faf5ef] p-4">
-          <Image
-            src={`/api/payment-qr?data=${encodeURIComponent(upiPaymentUrl)}`}
-            alt="QR code for loan repayment"
-            width={220}
-            height={220}
-            unoptimized
-            className="rounded-[1.2rem] border border-slate-200 bg-white p-2"
-          />
-        </div>
-
-        <div className="mt-5 space-y-3">
-          {[
-            { label: "Pay now", value: money(repaymentAmount) },
-            { label: "UPI ID", value: "qualoan@upi" },
-            { label: "Reference", value: profile.fullName },
-          ].map((item) => (
-            <GlassTile key={item.label} className="px-4 py-4">
-              <div className="text-sm text-[#8a7867]">{item.label}</div>
-              <div className="mt-1 text-xl font-semibold text-[#241c16]">{item.value}</div>
-            </GlassTile>
-          ))}
-        </div>
-
-        <p className="mt-4 text-sm leading-6 text-[#75685d]">
-          The client can scan this QR from any UPI app to pay the current repayment amount directly.
-        </p>
-      </Card>
-    </div>
-  )
-
-  const renderProfilePage = () => (
-    <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-      <Card className="overflow-hidden">
-        <div className="rounded-[1.8rem] bg-[#181310] p-5 text-white">
-          <SectionLabel>Profile photo</SectionLabel>
-          <h2 className="mt-2 text-2xl font-black text-white">Client identity card</h2>
-        </div>
-
-        <div className="mt-6 flex flex-col items-center rounded-[1.8rem] border border-[#ece0d5] bg-[linear-gradient(180deg,#fffdfa,#f8f0e7)] p-6 text-center">
-          {profilePhoto ? (
-            <Image
-              src={profilePhoto}
-              alt={`${profile.fullName} profile`}
-              width={152}
-              height={152}
-              className="size-38 rounded-[2rem] object-cover shadow-sm"
-            />
-          ) : (
-            <div className={`flex size-38 items-center justify-center rounded-[2rem] ${accent.panel}`}>
-              <span className="text-5xl font-black text-[#6e5c4b]">{profile.fullName.charAt(0).toUpperCase()}</span>
-            </div>
-          )}
-
-          <div className="mt-5 text-2xl font-black text-[#241c16]">{profile.fullName}</div>
-          <div className="mt-1 text-sm text-[#75685d]">{profile.email}</div>
-
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-          <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="mt-5 rounded-full px-5">
-            <Upload className="size-4" />
-            Change picture
-          </Button>
-        </div>
-
-        <div className="mt-5 space-y-3">
-          {[
-            { label: "Profile score", value: `${profile.score}/100` },
-            { label: "Reward points", value: `${points}` },
-            { label: "Sanction amount", value: money(profile.sanctionAmount) },
-          ].map((item) => (
-            <GlassTile key={item.label} className="px-4 py-4">
-              <div className="text-sm text-[#8a7867]">{item.label}</div>
-              <div className="mt-1 text-xl font-semibold text-[#241c16]">{item.value}</div>
-            </GlassTile>
-          ))}
-        </div>
-      </Card>
-
-      <Card className="overflow-hidden">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <SectionLabel>Client profile</SectionLabel>
-            <h2 className="mt-2 text-2xl font-black text-[#241c16]">View client and loan details</h2>
-            <p className="mt-2 text-sm text-[#75685d]">Only the profile picture can be changed here. All loan and KYC details are locked to the actual record.</p>
-          </div>
-          <div className={`rounded-full border px-4 py-2 text-sm font-medium ${accent.chip}`}>Read only profile</div>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {[
-            { label: "Client name", value: profile.fullName },
-            { label: "Mobile number", value: profile.mobile },
-            { label: "Email", value: profile.email },
-            { label: "City", value: profile.city || "-" },
-            { label: "PAN card", value: profile.panCard },
-            { label: "Aadhaar card", value: profile.aadhaarCard },
-            { label: "Account number", value: account.accountNumber },
-            { label: "IFSC code", value: account.ifsc },
-            { label: "Loan amount", value: money(amount) },
-            { label: "Sanction amount", value: money(profile.sanctionAmount) },
-            { label: "Disbursed amount", value: money(amount) },
-            { label: "Repayment amount", value: money(amount) },
-            { label: "Repayment date", value: profile.repaymentDate },
-          ].map((item) => (
-            <GlassTile key={item.label} className="px-4 py-4">
-              <div className="text-xs uppercase tracking-[0.2em] text-[#9a8979]">{item.label}</div>
-              <div className="mt-2 text-lg font-semibold text-[#241c16]">{item.value}</div>
-            </GlassTile>
-          ))}
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button type="button" onClick={() => goToPage("/dashboard/disbursal")} className="rounded-full bg-slate-950 px-5 text-white">
-            Go to disbursal
-          </Button>
-        </div>
-      </Card>
+  const profileName = application.fullName || profile.fullName
+  const profileEmail = application.email || profile.email
+  const profileCity = application.city || profile.city || "-"
+  const profileMobile = application.mobile || profile.mobile
+  const profilePhotoOrInitials = profilePhoto ? (
+    <Image src={profilePhoto} alt={profileName} width={192} height={192} className="size-44 rounded-full object-cover ring-4 ring-white shadow-[0_18px_40px_rgba(156,78,11,0.14)]" />
+  ) : (
+    <div className="flex size-44 items-center justify-center rounded-full bg-[#ffe2c9] text-6xl font-black text-[#9e520f] ring-4 ring-white shadow-[0_18px_40px_rgba(156,78,11,0.14)]">
+      {initials(profileName)}
     </div>
   )
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#f1e8de] text-[#241c16]">
-      <BackgroundPaths
-        showContent={false}
-        className="absolute inset-0 z-0 min-h-full bg-transparent opacity-75"
-        pathClassName="text-[#6f4f35]"
-      />
-      <div className="relative z-10 mx-auto max-w-[1550px] px-4 py-6 md:px-6 lg:px-8">
-        <div className="grid items-start gap-6 lg:grid-cols-[290px_minmax(0,1fr)]">
-          <AnimatePresence>
-            {sidebarOpen && (
-              <motion.button
-                type="button"
-                aria-label="Close menu overlay"
-                className="fixed inset-0 z-30 bg-slate-950/18 backdrop-blur-[2px] lg:hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setSidebarOpen(false)}
-              />
-            )}
-          </AnimatePresence>
-
-          <aside
-            className={`fixed inset-y-0 left-0 z-40 w-[310px] max-w-[calc(100vw-1.5rem)] px-4 py-6 transition-transform duration-300 md:px-6 lg:hidden ${
-              sidebarOpen ? "translate-x-0" : "-translate-x-[110%]"
-            }`}
-          >
-            <Card className="h-full rounded-[2.25rem] bg-[rgba(255,255,255,0.9)] p-4">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Menu</div>
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  className="flex size-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:text-slate-900"
-                >
-                  <X className="size-4" />
-                </button>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,247,240,0.98),_rgba(255,236,221,0.94)_42%,_#f6ddc6_100%)] p-3 text-[#201812] md:p-5">
+      <div className="mx-auto max-w-[1640px] overflow-hidden rounded-[2rem] border border-white/70 bg-[#fff9f4] shadow-[0_30px_100px_rgba(156,78,11,0.12)]">
+        <div className="grid min-h-[calc(100vh-1.5rem)] xl:grid-cols-[250px_minmax(0,1fr)_330px]">
+          <aside className="border-b border-[#f0d7bf] bg-[#fff0e2] p-4 xl:border-b-0 xl:border-r">
+            <div className="sticky top-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-11 items-center justify-center rounded-[1rem] bg-[#d86c1e] text-white shadow-[0_10px_30px_rgba(216,108,30,0.24)]">
+                  <Sparkles className="size-5" />
+                </div>
+                <div>
+                  <div className="text-[1.1rem] font-black tracking-[-0.03em] text-[#9e520f]">QuaLoan</div>
+                  <div className="text-xs uppercase tracking-[0.22em] text-[#c96a1a]">Client journey</div>
+                </div>
               </div>
 
-              <div className={`rounded-[1.8rem] bg-gradient-to-br ${accent.wash} p-5`}>
-                <div className="flex items-start gap-3">
-                  <div className="flex size-12 items-center justify-center rounded-[1.3rem] bg-white text-slate-950 shadow-sm">
-                    {profilePhoto ? (
-                      <Image src={profilePhoto} alt={`${profile.fullName} avatar`} width={48} height={48} className="size-12 rounded-[1.3rem] object-cover" />
-                    ) : (
-                      <span className="text-lg font-black">{profile.fullName.charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-slate-500">Borrower workspace</div>
-                    <div className="mt-1 text-lg font-black text-slate-950">{profile.fullName}</div>
-                    <div className="text-sm text-slate-500">{profile.mobile}</div>
+              <div className="rounded-[1.75rem] border border-[#f0d7bf] bg-white p-5 shadow-[0_12px_40px_rgba(156,78,11,0.06)]">
+                <div className="flex items-center gap-4">
+                  {profilePhoto ? (
+                    <Image src={profilePhoto} alt={profile.fullName} width={96} height={96} className="size-24 shrink-0 rounded-full object-cover ring-4 ring-[#ffe8d3]" />
+                  ) : (
+                    <div className="flex size-24 shrink-0 items-center justify-center rounded-full bg-[#ffe0c5] text-3xl font-black text-[#9e520f] ring-4 ring-[#ffe8d3]">
+                      {initials(profile.fullName)}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-xl font-black tracking-[-0.03em] text-[#201812]">{profile.fullName}</div>
+                    <div className="truncate text-sm text-[#8a7a6d]">{profile.email}</div>
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-[1.5rem] bg-white/70 p-4">
-                  <div className="flex items-center justify-between text-sm text-slate-600">
-                    <span>Journey progress</span>
-                    <span className="font-semibold text-slate-950">{completion}%</span>
+                <div className="mt-5 rounded-[1.2rem] bg-[#fff7ef] p-4">
+                  <div className="text-[10px] uppercase tracking-[0.22em] text-[#c86a18]">Progress</div>
+                  <div className="mt-2 flex items-end justify-between">
+                    <div className="text-3xl font-black tracking-[-0.04em]">{progress}%</div>
+                    <div className="text-sm font-semibold text-[#6f6358]">Next: {nextNavItem.label}</div>
                   </div>
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/70">
-                    <motion.div className={`h-full rounded-full bg-gradient-to-r ${accent.progress}`} initial={{ width: 0 }} animate={{ width: `${completion}%` }} />
-                  </div>
-                  <div className="mt-3 text-xs uppercase tracking-[0.18em] text-slate-400">
-                    Step {Math.max(1, activeIndex + 1)} of {navItems.length}
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#f2d7bf]">
+                    <div className="h-full rounded-full bg-[#d86c1e]" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 space-y-2">
+              <nav className="space-y-2">
                 {navItems.map((item) => {
                   const Icon = item.icon
                   const isActive = item.id === activePage
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`group flex items-center justify-between rounded-[1.35rem] border px-3 py-3 text-sm transition ${
-                        isActive ? `border-white bg-white text-slate-950 shadow-sm` : "border-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`flex size-10 items-center justify-center rounded-[1rem] ${isActive ? accent.icon : "bg-slate-100 text-slate-500 group-hover:bg-white"}`}>
-                          <Icon className="size-4" />
-                        </div>
-                        <div>
-                          <div className="font-medium">{item.label}</div>
-                          <div className="text-xs text-slate-400">{item.short}</div>
-                        </div>
-                      </div>
-                      <ChevronRight className="size-4 opacity-40" />
-                    </Link>
-                  )
-                })}
-              </div>
-
-              <div className="mt-5 rounded-[1.6rem] bg-slate-50/90 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.22em] text-slate-400">Reward points</div>
-                    <div className="mt-2 text-2xl font-black text-slate-950">{points}</div>
-                  </div>
-                  <div className={`rounded-full px-3 py-1 text-xs font-semibold ${canRedeem ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                    {canRedeem ? "Redeem now" : "Reach 500"}
-                  </div>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
-                  <motion.div className={`h-full rounded-full bg-gradient-to-r ${accent.progress}`} initial={{ width: 0 }} animate={{ width: `${Math.min(100, (points / 500) * 100)}%` }} />
-                </div>
-                <div className="mt-2 text-sm text-slate-500">
-                  Each completed step gives `100` points. All five steps unlock redemption.
-                </div>
-              </div>
-            </Card>
-          </aside>
-
-          <aside className="hidden lg:sticky lg:top-6 lg:block lg:self-start">
-            <Card className="rounded-[2.2rem] bg-[rgba(255,255,255,0.88)] p-4">
-              <div className="mb-5 flex items-center gap-3 rounded-[1.8rem] bg-[linear-gradient(135deg,#17120f,#31251d)] px-4 py-4 text-white">
-                <div className="flex size-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-base font-black text-white">Q</div>
-                <div>
-                  <div className="text-sm font-semibold text-white">QuaLoan</div>
-                  <div className="text-xs uppercase tracking-[0.22em] text-white/55">Workspace</div>
-                </div>
-              </div>
-
-              <div className={`rounded-[1.8rem] bg-gradient-to-br ${accent.wash} p-4`}>
-                <div className="flex items-center gap-3">
-                  <div className="flex size-14 items-center justify-center rounded-[1.2rem] bg-white text-[#241c16] shadow-sm">
-                    {profilePhoto ? (
-                      <Image src={profilePhoto} alt={`${profile.fullName} avatar`} width={56} height={56} className="size-14 rounded-[1.2rem] object-cover" />
-                    ) : (
-                      <span className="text-xl font-black">{profile.fullName.charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-[#8b7b6a]">Borrower</div>
-                    <div className="mt-1 text-lg font-black text-[#241c16]">{profile.fullName}</div>
-                    <div className="text-sm text-[#75685d]">{profile.mobile}</div>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-[1.2rem] bg-white/80 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-[#8b7b6a]">Progress</div>
-                    <div className="mt-2 text-2xl font-black text-[#241c16]">{completion}%</div>
-                  </div>
-                  <div className="rounded-[1.2rem] bg-white/80 p-3">
-                    <div className="text-[10px] uppercase tracking-[0.2em] text-[#8b7b6a]">Points</div>
-                    <div className="mt-2 text-2xl font-black text-[#241c16]">{points}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8f7d6d]">Loan flow</div>
-                <div className="space-y-2">
-                  {navItems.map((item) => {
-                    const Icon = item.icon
-                    const isActive = item.id === activePage
+                  if (item.id === "profile") {
                     return (
-                      <Link
+                      <button
                         key={item.id}
-                        href={item.href}
-                        className={`flex items-center justify-between rounded-[1.35rem] border px-3 py-3 text-sm transition ${
-                          isActive
-                            ? "border-[#e6d7c8] bg-white text-[#241c16] shadow-[0_10px_30px_rgba(117,88,57,0.07)]"
-                            : "border-transparent text-[#75685d] hover:border-[#eadfce] hover:bg-white/80 hover:text-[#241c16]"
+                        type="button"
+                        onClick={() => setShowProfilePreview(true)}
+                        className={`flex w-full items-center justify-between rounded-[1rem] border px-4 py-3 text-sm transition ${
+                          isActive ? "border-[#d86c1e] bg-[#d86c1e] text-white shadow-[0_12px_30px_rgba(216,108,30,0.22)]" : "border-[#f0d7bf] bg-white text-[#201812] hover:bg-[#fff4e9]"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`flex size-10 items-center justify-center rounded-[1rem] ${isActive ? accent.icon : "bg-[#f5eee7] text-[#7b6b5d]"}`}>
-                            <Icon className="size-4" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{item.label}</div>
-                            <div className="text-xs text-[#9a8979]">{item.short}</div>
-                          </div>
+                          <Icon className="size-4" />
+                          <span>{item.label}</span>
                         </div>
-                        <ChevronRight className="size-4 opacity-40" />
-                      </Link>
+                        <ChevronRight className="size-4 opacity-55" />
+                      </button>
                     )
-                  })}
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-[1.6rem] bg-[linear-gradient(180deg,#faf5ef,#f5ede4)] p-4">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8f7d6d]">Reports</div>
-                <div className="mt-3 space-y-2 text-sm text-[#5f5146]">
-                  <div className="flex items-center justify-between rounded-full bg-white/80 px-3 py-2">
-                    <span>Repayment health</span>
-                    <span className="font-semibold">{Math.round((points / 500) * 100)}%</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-full bg-white/80 px-3 py-2">
-                    <span>Bank verified</span>
-                    <span className="font-semibold">{completedSteps.bank ? "Yes" : "No"}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </aside>
-
-          <section className="space-y-6">
-            <div className="p-0">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.8rem] border border-[#eadfce] bg-[rgba(255,255,255,0.82)] px-4 py-3 shadow-[0_16px_40px_rgba(117,88,57,0.06)] backdrop-blur-xl">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSidebarOpen((current) => !current)}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#eadfce] bg-white px-4 py-2 text-sm font-medium text-[#5b4c40] shadow-sm transition hover:border-[#dbcab6] lg:hidden"
-                  >
-                    <Menu className="size-4" />
-                    {sidebarOpen ? "Close" : "Menu"}
-                  </button>
-                  <div className="relative hidden min-w-[280px] flex-1 items-center md:flex lg:min-w-[340px]">
-                    <Search className="pointer-events-none absolute left-4 size-4 text-[#9a8979]" />
-                    <input readOnly value="Try searching borrower insights" className="h-11 w-full rounded-full border border-[#ece1d6] bg-[#fbf8f4] pl-11 pr-4 text-sm text-[#9a8979] outline-none" />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button className="flex size-11 items-center justify-center rounded-full border border-[#eadfce] bg-white text-[#6f6054] shadow-sm">
-                    <Bell className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => goToPage("/dashboard/profile")}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#eadfce] bg-white px-4 py-2 text-sm font-medium text-[#5f5146] shadow-sm transition hover:border-[#dbcab6]"
-                  >
-                    <div className={`flex size-7 items-center justify-center rounded-full ${accent.icon}`}>
-                      {profilePhoto ? (
-                        <Image
-                          src={profilePhoto}
-                          alt={`${profile.fullName} avatar`}
-                          width={28}
-                          height={28}
-                          className="size-7 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-xs font-bold">{profile.fullName.charAt(0).toUpperCase()}</span>
-                      )}
-                    </div>
-                    {profile.fullName}
-                  </button>
-                  <Button type="button" variant="outline" onClick={handleLogout} className="rounded-full border-[#eadfce] bg-white px-4 text-[#5f5146]">
-                    Logout
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-3 overflow-hidden rounded-[2rem] border border-[#ebdfd2] bg-[rgba(255,255,255,0.78)] p-6 shadow-[0_18px_48px_rgba(117,88,57,0.06)] backdrop-blur-xl">
-                <div className="flex flex-wrap items-start justify-between gap-6">
-                  <div className="max-w-3xl">
-                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] ${accent.chip}`}>
-                      <Sparkles className="size-3.5" />
-                      {copy.eyebrow}
-                    </div>
-                    <h1 className="mt-5 text-3xl font-black tracking-[-0.03em] text-[#1f1711] md:text-5xl">{copy.title}</h1>
-                    <p className="mt-3 max-w-2xl text-sm leading-6 text-[#75685d] md:text-base">{copy.description}</p>
-                  </div>
-
-                  <div className="grid w-full gap-3 md:grid-cols-3 xl:w-[540px]">
-                    <div className="rounded-[1.4rem] border border-[#efe3d7] bg-[#fcf8f4] p-4">
-                      <div className="text-[11px] uppercase tracking-[0.22em] text-[#9a8979]">Selected amount</div>
-                      <div className="mt-3 text-2xl font-black text-[#241c16]">{money(amount)}</div>
-                    </div>
-                    <div className="rounded-[1.4rem] border border-[#efe3d7] bg-[#fcf8f4] p-4">
-                      <div className="text-[11px] uppercase tracking-[0.22em] text-[#9a8979]">Repayment window</div>
-                      <div className="mt-3 text-2xl font-black text-[#241c16]">{tenure} days</div>
-                    </div>
-                    <div className="rounded-[1.4rem] border border-[#14110f] bg-[#14110f] p-4 text-white">
-                      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/60">
-                        <span>Progress</span>
-                        <span>{completion}%</span>
-                      </div>
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
-                        <motion.div className={`h-full rounded-full bg-gradient-to-r ${accent.progress}`} initial={{ width: 0 }} animate={{ width: `${completion}%` }} />
-                      </div>
-                      <div className="mt-3 text-sm text-white/70">Next step: {nextNavItem.label}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                {navItems.map((item) => {
-                  const Icon = item.icon
-                  const isActive = item.id === activePage
+                  }
                   return (
                     <Link
                       key={item.id}
                       href={item.href}
-                      className={`inline-flex min-w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
-                        isActive ? "border-[#e6d7c8] bg-white text-[#241c16] shadow-sm" : "border-[#ece1d6] bg-white/80 text-[#6e5f53] hover:border-[#dbcab6] hover:text-[#241c16]"
+                      className={`flex items-center justify-between rounded-[1rem] border px-4 py-3 text-sm transition ${
+                        isActive ? "border-[#d86c1e] bg-[#d86c1e] text-white shadow-[0_12px_30px_rgba(216,108,30,0.22)]" : "border-[#f0d7bf] bg-white text-[#201812] hover:bg-[#fff4e9]"
                       }`}
                     >
-                      <Icon className="size-4" />
-                      {item.label}
+                      <div className="flex items-center gap-3">
+                        <Icon className="size-4" />
+                        <span>{item.label}</span>
+                      </div>
+                      <ChevronRight className="size-4 opacity-55" />
                     </Link>
                   )
                 })}
+              </nav>
+
+              <div className="space-y-2 pt-2">
+                <Button type="button" onClick={() => setShowProfilePreview(true)} className="w-full rounded-full bg-[#d86c1e] text-white hover:bg-[#c85f16]">
+                  Profile
+                </Button>
+                <Button type="button" variant="outline" onClick={handleLogout} className="w-full rounded-full border-[#f0d7bf] bg-white">
+                  Sign out
+                </Button>
               </div>
             </div>
+          </aside>
 
-            <div className="hidden items-center justify-between rounded-[1.6rem] border border-[#e9dfd4] bg-[rgba(255,255,255,0.76)] px-5 py-4 text-sm text-[#75685d] shadow-[0_12px_40px_rgba(117,88,57,0.05)] backdrop-blur-xl md:flex">
-              <div>Workspace rhythm: finish the current step, collect points, and keep the client moving without friction.</div>
-              <div className="font-semibold text-[#241c16]">{canRedeem ? "Reward unlocked" : `${Math.max(0, 500 - points)} points to unlock rewards`}</div>
-            </div>
-
-            <ActivityGuide
-              accent={copy.accent}
-              title={guideState[activePage].title}
-              text={guideState[activePage].text}
-              badge={guideState[activePage].badge}
-              x={guideState[activePage].x}
-              y={guideState[activePage].y}
-            />
-
-            {activePage === "overview" && renderOverviewPage()}
-            {activePage === "application" && renderApplicationPage()}
-            {activePage === "offer-studio" && renderOfferStudioPage()}
-            {activePage === "disbursal" && renderDisbursalPage()}
-            {activePage === "repayment-plan" && renderRepaymentPage()}
-            {activePage === "profile" && renderProfilePage()}
-
-            <AnimatePresence>
-              {funded && (
-                <motion.div
-                  className="rounded-[1.8rem] border border-[#ecd4b8] bg-[#fff6eb] px-5 py-4 text-[#8b5b2f] shadow-[0_14px_40px_rgba(214,145,103,0.12)]"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 12 }}
-                >
-                  <div className="flex items-center gap-3 font-medium">
-                    <CheckCircle2 className="size-5" />
-                    {money(amount)} disbursed successfully to {account.bank} ending in {account.accountNumber.slice(-4)}.
+          <section className="min-w-0 border-b border-[#f0d7bf] bg-[#fffaf6] p-4 md:p-6 xl:border-b-0 xl:border-r">
+            <div className="space-y-4">
+              <Card className="p-4 md:p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c86a18]">Hello {profile.fullName.split(" ")[0] || user.name.split(" ")[0] || "there"} 👋</div>
+                    <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] text-[#1f1913] md:text-4xl">{copy.title}</h1>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6f6358]">{copy.description}</p>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <button className="inline-flex h-11 items-center justify-between gap-3 rounded-full border border-[#f0d7bf] bg-white px-4 text-sm text-[#45382f] shadow-[0_8px_20px_rgba(156,78,11,0.04)]">
+                      <span className="truncate">Choose account</span>
+                      <ChevronDown className="size-4 shrink-0 opacity-65" />
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {topActions.map(({ label, icon: Icon }) => (
+                        <button
+                          key={label}
+                          type="button"
+                          aria-label={label}
+                          className="flex size-11 items-center justify-center rounded-full border border-[#f0d7bf] bg-white text-[#9e520f] shadow-[0_8px_20px_rgba(156,78,11,0.04)] transition hover:-translate-y-0.5"
+                        >
+                          <Icon className="size-4" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.9fr)_minmax(0,0.9fr)]">
+                <Card className="overflow-hidden bg-[#3a1d0d] text-white">
+                  <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-white/88">My Card</div>
+                      <div className="mt-5 text-4xl font-black tracking-[-0.05em] text-white md:text-[2.8rem]">{money(amount)}</div>
+                      <div className="mt-3 text-sm text-white/60">Loan limit and progress stay visible in one place.</div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button type="button" className="rounded-full bg-[#ffb15a] px-5 text-[#3a1d0d] hover:bg-[#ffa23f]">
+                        Deposit
+                      </Button>
+                      <Button type="button" variant="outline" className="rounded-full border-white/20 bg-transparent px-5 text-white hover:bg-white/10">
+                        Withdraw
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-end justify-between gap-4 px-5 pb-5">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-[#ffb15a]">
+                      <ArrowUpRight className="size-4" />
+                      +10%
+                    </div>
+                    <div className="h-16 w-28">
+                      <svg viewBox="0 0 112 64" className="h-full w-full">
+                        <path d={`${heroSecondaryPath} L 106 58 L 6 58 Z`} fill="#ffffff" fillOpacity="0.04" />
+                        <path d={heroSecondaryPath} fill="none" stroke="#ffffff" strokeOpacity="0.35" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d={`${heroPrimaryPath} L 106 58 L 6 58 Z`} fill="url(#cardGradient)" fillOpacity="0.16" />
+                        <path d={heroPrimaryPath} fill="none" stroke="#ffb15a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <defs>
+                          <linearGradient id="cardGradient" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#ffb15a" />
+                            <stop offset="100%" stopColor="#ffb15a" stopOpacity="0.05" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="bg-[#ffffff]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Transactions</div>
+                      <div className="mt-1 text-sm text-[#7b6d62]">Recent loan activity</div>
+                    </div>
+                    <button className="inline-flex h-10 items-center gap-2 rounded-full border border-[#f0d7bf] bg-white px-4 text-sm text-[#42362f]">
+                      Month
+                      <ChevronDown className="size-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    {activityItems.map((item) => (
+                      <ActivityRow key={item.title} {...item} />
+                    ))}
+                  </div>
+                </Card>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(0,0.95fr)]">
+                <Card className="p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Financial record</div>
+                      <div className="mt-1 text-sm text-[#7b6d62]">Amount, fees, and payoff visibility</div>
+                    </div>
+                    <button className="inline-flex h-10 items-center gap-2 rounded-full border border-[#f0d7bf] bg-white px-4 text-sm text-[#8d4710]">
+                      Month
+                      <ChevronDown className="size-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-5 grid gap-4 md:grid-cols-3">
+                    <StatCard label="Total amount" value={money(amount)} delta="17%" color="#ef8a2f" values={[16, 20, 19, 23, 21, 26, 28]} />
+                    <StatCard label="Total fee" value={money(fee)} delta="44%" color="#ffb15a" values={[10, 12, 11, 15, 14, 16, 17]} />
+                    <StatCard label="Total repay" value={money(totalPayable)} delta="45%" color="#d56a16" values={[14, 16, 15, 19, 20, 24, 22]} />
+                  </div>
+                </Card>
+
+                <Card className="p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Available card</div>
+                      <div className="mt-1 text-sm text-[#7b6d62]">Your active account details</div>
+                    </div>
+                    <button className="text-sm font-semibold text-[#2f2620]">View all</button>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    {[
+                      {
+                        amount: money(profile.sanctionAmount),
+                        number: `**** ${account.accountNumber.slice(-4)}`,
+                        label: account.bank,
+                        accent: "bg-[#fff0e1]",
+                        brand: "VISA",
+                      },
+                      {
+                        amount: money(repaymentAmount),
+                        number: `**** ${String(repaymentAmount).slice(-4).padStart(4, "0")}`,
+                        label: "Repayment card",
+                        accent: "bg-[#fff3e4]",
+                        brand: "Card",
+                      },
+                    ].map((cardItem) => (
+                      <div key={cardItem.label} className={`rounded-[1.35rem] ${cardItem.accent} p-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)]`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="text-[11px] uppercase tracking-[0.24em] text-[#c86a18]">{cardItem.amount}</div>
+                            <div className="mt-5 text-sm font-semibold text-[#352c25]">{cardItem.label}</div>
+                            <div className="mt-1 text-sm text-[#5f5349]">Card number {cardItem.number}</div>
+                          </div>
+                          <div className="text-sm font-black text-[#8d4710]">{cardItem.brand}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                <Card className="p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Send money to</div>
+                      <div className="mt-1 text-sm text-[#7b6d62]">Shortcut actions for the loan flow</div>
+                    </div>
+                    <MoreHorizontal className="size-5 text-[#c86a18]" />
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    {[
+                      { label: "Application", icon: FileText },
+                      { label: "Offer", icon: SlidersHorizontal },
+                      { label: "Disbursal", icon: HandCoins },
+                      { label: "Repayment", icon: PiggyBank },
+                    ].map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={() => goToPage(`/dashboard${item.label === "Application" ? "/application" : item.label === "Offer" ? "/offer-studio" : item.label === "Disbursal" ? "/disbursal" : "/repayment-plan"}`)}
+                          className="flex min-w-[92px] flex-1 flex-col items-center gap-2 rounded-[1.25rem] border border-[#f0d7bf] bg-white px-3 py-4 text-center transition hover:-translate-y-0.5 hover:shadow-[0_12px_25px_rgba(156,78,11,0.06)]"
+                        >
+                          <div className="flex size-11 items-center justify-center rounded-full bg-[#d86c1e] text-white">
+                            <Icon className="size-4" />
+                          </div>
+                          <div className="text-sm font-semibold text-[#241a13]">{item.label}</div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </Card>
+
+                <Card className="p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Scheduled payments</div>
+                      <div className="mt-1 text-sm text-[#7b6d62]">The next visible milestones</div>
+                    </div>
+                    <MoreHorizontal className="size-5 text-[#c86a18]" />
+                  </div>
+
+                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                    {[
+                      { label: "Profile review", value: "Today", tone: "bg-[#fff1e2]" },
+                      { label: "Bank release", value: funded ? "Done" : "Queued", tone: "bg-[#fff4ea]" },
+                      { label: "Repayment QR", value: money(repaymentAmount), tone: "bg-[#fff7ef]" },
+                      { label: "Document check", value: "Open", tone: "bg-[#fff2e8]" },
+                    ].map((item) => (
+                      <div key={item.label} className={`rounded-[1.15rem] ${item.tone} p-4`}>
+                        <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">{item.label}</div>
+                        <div className="mt-2 text-sm font-bold text-[#241a13]">{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+
+              {renderPageWorkspace()}
+            </div>
           </section>
+
+          <aside className="bg-[#fbfaf8] p-4 md:p-6">
+            <div className="sticky top-4 space-y-4">
+              <Card className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Quick status</div>
+                    <div className="mt-1 text-sm text-[#7b6d62]">Minimal view of the current journey</div>
+                  </div>
+                  <button className="rounded-full border border-[#f0d7bf] bg-white px-3 py-1 text-xs font-semibold text-[#8d4710]">
+                    {canRedeem ? "Redeem" : "Locked"}
+                  </button>
+                </div>
+
+                <div className="mt-5 rounded-[1.3rem] bg-[#fff4ea] p-4">
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Borrower</div>
+                  <div className="mt-2 text-lg font-black text-[#201812]">{profile.fullName}</div>
+                  <div className="mt-1 text-sm text-[#6f6358]">{profile.email}</div>
+                  <div className="mt-4 flex items-center justify-between text-sm">
+                    <span className="text-[#6f6358]">Redeemable</span>
+                    <span className={`font-semibold ${canRedeem ? "text-[#d86c1e]" : "text-[#8b5b2f]"}`}>{canRedeem ? "Yes" : "Not yet"}</span>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Recent totals</div>
+                    <div className="mt-1 text-sm text-[#7b6d62]">A compact financial snapshot</div>
+                  </div>
+                  <Wallet className="size-5 text-[#c86a18]" />
+                </div>
+
+                <div className="mt-5 space-y-3">
+                  <div className="rounded-[1.15rem] bg-[#fff1e2] p-4">
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Balance</div>
+                    <div className="mt-2 text-2xl font-black text-[#201812]">{money(amount)}</div>
+                  </div>
+                  <div className="rounded-[1.15rem] bg-[#fff1e2] p-4">
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Repayment</div>
+                    <div className="mt-2 text-2xl font-black text-[#201812]">{money(monthlyRepayment)}</div>
+                  </div>
+                  <div className="rounded-[1.15rem] bg-[#fff1e2] p-4">
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-[#c86a18]">Points</div>
+                    <div className="mt-2 text-2xl font-black text-[#201812]">{points}</div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-2xl font-black tracking-[-0.04em] text-[#201812]">Mobile ready</div>
+                    <div className="mt-1 text-sm text-[#7b6d62]">Work well on smaller screens too</div>
+                  </div>
+                  <Send className="size-5 text-[#c86a18]" />
+                </div>
+
+                <div className="mt-4 rounded-[1.3rem] border border-dashed border-[#f0d7bf] bg-white p-4">
+                  <div className="text-sm font-semibold text-[#241a13]">Clear spacing, one stable shell, and a responsive layout.</div>
+                  <div className="mt-2 text-sm leading-6 text-[#6f6358]">
+                    The goal is to keep the banking-style dashboard readable on desktop and still usable when the screen gets narrow.
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </aside>
         </div>
       </div>
+
+      {showProfilePreview && (
+        <div
+          className="fixed inset-0 z-[230] flex items-center justify-center bg-[#2a1708]/70 p-4 backdrop-blur-xl"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowProfilePreview(false)
+            }
+          }}
+        >
+          <div className="w-full max-w-4xl overflow-hidden rounded-[2rem] border border-orange-200/70 bg-[#fff8f1] shadow-[0_40px_160px_rgba(120,53,15,0.24)]">
+            <div className="flex items-start justify-between gap-4 border-b border-orange-200/70 p-5">
+              <div>
+                <div className="text-xs font-bold uppercase tracking-[0.28em] text-orange-700">Profile photo</div>
+                <h3 className="mt-2 text-2xl font-black tracking-[-0.03em] text-slate-950">Client identity</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowProfilePreview(false)}
+                className="flex size-10 items-center justify-center rounded-full border border-orange-200 bg-white text-[#8a5a24] transition hover:text-slate-950"
+                aria-label="Close profile preview"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="grid gap-5 p-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+              <div className="rounded-[1.8rem] bg-white p-5 text-center shadow-[0_16px_40px_rgba(249,115,22,0.08)]">
+                {profilePhotoOrInitials}
+                <div className="mt-5 text-2xl font-black tracking-[-0.03em] text-slate-950">{profileName}</div>
+                <div className="mt-1 text-sm text-[#6f4317]">{profileEmail}</div>
+                <div className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">Visible from the left profile button</div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: "Client name", value: profileName },
+                  { label: "Mobile", value: profileMobile },
+                  { label: "Email", value: profileEmail },
+                  { label: "City", value: profileCity },
+                  { label: "PAN", value: profile.panCard },
+                  { label: "Aadhaar", value: profile.aadhaarCard },
+                  { label: "Bank", value: account.bank },
+                  { label: "Account", value: account.accountNumber },
+                  { label: "Loan amount", value: money(amount) },
+                  { label: "Sanction amount", value: money(profile.sanctionAmount) },
+                  { label: "Repayment date", value: profile.repaymentDate },
+                  { label: "Score", value: `${profile.score}/100` },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-[1.4rem] border border-orange-100 bg-white px-4 py-3">
+                    <div className="text-[10px] uppercase tracking-[0.24em] text-orange-700">{item.label}</div>
+                    <div className="mt-2 text-sm font-semibold text-slate-950">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

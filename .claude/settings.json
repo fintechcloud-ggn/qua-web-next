@@ -3,7 +3,7 @@
     "PostToolUse": [
       {
         "matcher": "Edit|Write|Bash",
-        "command": "code-review-graph update --skip-flows",
+        "command": "CRG_SERIAL_PARSE=1 code-review-graph update --skip-flows",
         "timeout": 5000
       }
     ],

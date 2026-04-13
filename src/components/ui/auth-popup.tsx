@@ -23,6 +23,7 @@ export default function AuthPopup({
   const [mode, setMode] = useState<AuthMode>("signin")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showProfileDetails, setShowProfileDetails] = useState(false)
   const [form, setForm] = useState({
     name: "Anu Sharma",
     mobile: "9876543210",
@@ -34,6 +35,15 @@ export default function AuthPopup({
   const title = useMemo(() => {
     return mode === "signin" ? "Welcome back" : "Create borrower access"
   }, [mode])
+
+  const initials = useMemo(() => {
+    return form.name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("")
+  }, [form.name])
 
   const handleContinue = async () => {
     setLoading(true)
@@ -71,7 +81,7 @@ export default function AuthPopup({
       setLoading(false)
       startTransition(() => {
         onClose()
-        router.push("/dashboard")
+        router.push("/dashboard/application")
       })
       router.refresh()
     } catch {
@@ -115,6 +125,21 @@ export default function AuthPopup({
                   Sign in through a focused popup and land directly in a proper loan dashboard with offer controls,
                   account setup, repayment view, and application activity.
                 </p>
+
+                <button
+                  type="button"
+                  onClick={() => setShowProfileDetails(true)}
+                  className="mt-8 flex w-full items-center gap-4 rounded-[1.9rem] border border-orange-200 bg-white/85 p-4 text-left shadow-[0_16px_40px_rgba(249,115,22,0.08)] transition hover:-translate-y-0.5"
+                >
+                  <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-[#f97316] text-2xl font-black text-white ring-4 ring-orange-100">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-2xl font-black tracking-[-0.03em] text-slate-950">{form.name}</div>
+                    <div className="truncate text-sm text-[#6f4317]">{form.email}</div>
+                    <div className="mt-1 text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">Tap to view profile</div>
+                  </div>
+                </button>
 
                 <div className="mt-8 grid gap-4 sm:grid-cols-3">
                   {[
@@ -285,6 +310,73 @@ export default function AuthPopup({
           </motion.div>
         </motion.div>
       )}
+
+      <AnimatePresence>
+        {showProfileDetails && (
+          <motion.div
+            className="fixed inset-0 z-[230] flex items-center justify-center bg-[#2a1708]/70 p-4 backdrop-blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                setShowProfileDetails(false)
+              }
+            }}
+          >
+            <motion.div
+              className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-orange-200/70 bg-[#fff8f1] shadow-[0_40px_160px_rgba(120,53,15,0.24)]"
+              initial={{ opacity: 0, y: 26, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 240, damping: 24 }}
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-orange-200/70 p-5">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-[0.28em] text-orange-700">Profile photo</div>
+                  <h3 className="mt-2 text-2xl font-black tracking-[-0.03em] text-slate-950">Client identity</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileDetails(false)}
+                  className="flex size-10 items-center justify-center rounded-full border border-orange-200 bg-white text-[#8a5a24] transition hover:text-slate-950"
+                  aria-label="Close profile preview"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              <div className="grid gap-5 p-5 md:grid-cols-[220px_minmax(0,1fr)]">
+                <div className="rounded-[1.8rem] bg-white p-5 text-center shadow-[0_16px_40px_rgba(249,115,22,0.08)]">
+                  <div className="mx-auto flex size-32 items-center justify-center rounded-full bg-[#f97316] text-4xl font-black text-white ring-8 ring-orange-100">
+                    {initials}
+                  </div>
+                  <div className="mt-4 text-2xl font-black tracking-[-0.03em] text-slate-950">{form.name}</div>
+                  <div className="mt-1 text-sm text-[#6f4317]">{form.email}</div>
+                  <div className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">Available in popup</div>
+                </div>
+
+                <div className="grid gap-3">
+                  {[
+                    { label: "Mobile", value: form.mobile },
+                    { label: "Email", value: form.email },
+                    { label: "City", value: form.city },
+                    { label: "Password / OTP", value: form.password },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-[1.4rem] border border-orange-100 bg-white px-4 py-3">
+                      <div className="text-[10px] uppercase tracking-[0.24em] text-orange-700">{item.label}</div>
+                      <div className="mt-2 text-sm font-semibold text-slate-950">{item.value}</div>
+                    </div>
+                  ))}
+                  <div className="rounded-[1.4rem] border border-orange-100 bg-orange-50 px-4 py-4 text-sm text-[#6f4317]">
+                    This profile preview is shown from the round avatar in the login popup, not from the dashboard.
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   )
 }

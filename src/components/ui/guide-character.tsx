@@ -28,6 +28,8 @@ export default function GuideCharacter({ onApplyClick }: { onApplyClick: () => v
   const [isBlinking, setIsBlinking] = useState(false)
   const [isCelebrating, setIsCelebrating] = useState(false)
   const [isFacingRight, setIsFacingRight] = useState(true)
+  const [viewport, setViewport] = useState({ width: 0, height: 0 })
+  const [position, setPosition] = useState({ x: 0, y: 0 })
 
   const hintTimerRef = useRef<number | null>(null)
   const bubbleTimerRef = useRef<number | null>(null)
@@ -35,6 +37,7 @@ export default function GuideCharacter({ onApplyClick }: { onApplyClick: () => v
   const waveTimerRef = useRef<number | null>(null)
   const blinkTimerRef = useRef<number | null>(null)
   const celebrateTimerRef = useRef<number | null>(null)
+  const moveTimerRef = useRef<number | null>(null)
 
   const showMessage = useCallback((nextMessage?: string) => {
     const selected = nextMessage ?? MESSAGES[Math.floor(Math.random() * MESSAGES.length)]
@@ -72,10 +75,50 @@ export default function GuideCharacter({ onApplyClick }: { onApplyClick: () => v
     }, 700)
   }, [])
 
+  const moveFox = useCallback(
+    (nextPosition?: { x: number; y: number }) => {
+      const size = viewport.width < 640 ? 110 : 128
+      const padding = viewport.width < 640 ? 12 : 20
+      const maxX = Math.max(padding, viewport.width - size - padding)
+      const maxY = Math.max(padding, viewport.height - size - padding)
+      const next =
+        nextPosition ?? {
+          x: padding + Math.random() * Math.max(1, maxX - padding),
+          y: padding + Math.random() * Math.max(1, maxY - padding),
+        }
+
+      setPosition((current) => {
+        const isMovingRight = next.x >= current.x
+        setIsFacingRight(isMovingRight)
+        return {
+          x: Math.max(padding, Math.min(next.x, maxX)),
+          y: Math.max(padding, Math.min(next.y, maxY)),
+        }
+      })
+    },
+    [viewport.height, viewport.width]
+  )
+
   useEffect(() => {
+    const syncViewport = () => {
+      setViewport({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      })
+    }
+
+    syncViewport()
+    window.addEventListener("resize", syncViewport)
+
     hintTimerRef.current = window.setTimeout(() => {
       setShowHint(false)
     }, 5000)
+
+    const initialX = Math.max(16, window.innerWidth * 0.08)
+    const initialY = Math.max(16, window.innerHeight * 0.68)
+    const initTimer = window.setTimeout(() => {
+      moveFox({ x: initialX, y: initialY })
+    }, 0)
 
     const tipLoop = window.setInterval(() => {
       showMessage()
@@ -85,7 +128,12 @@ export default function GuideCharacter({ onApplyClick }: { onApplyClick: () => v
       triggerBlink()
     }, 5200)
 
+    moveTimerRef.current = window.setInterval(() => {
+      moveFox()
+    }, 5200)
+
     return () => {
+      window.removeEventListener("resize", syncViewport)
       if (hintTimerRef.current !== null) {
         window.clearTimeout(hintTimerRef.current)
       }
@@ -104,10 +152,14 @@ export default function GuideCharacter({ onApplyClick }: { onApplyClick: () => v
       if (celebrateTimerRef.current !== null) {
         window.clearTimeout(celebrateTimerRef.current)
       }
+      if (moveTimerRef.current !== null) {
+        window.clearInterval(moveTimerRef.current)
+      }
+      window.clearTimeout(initTimer)
       window.clearInterval(tipLoop)
       window.clearInterval(blinkLoop)
     }
-  }, [showMessage, triggerBlink])
+  }, [moveFox, showMessage, triggerBlink])
 
   const handleClick = () => {
     setIsJumping(true)
@@ -115,6 +167,7 @@ export default function GuideCharacter({ onApplyClick }: { onApplyClick: () => v
     setIsFacingRight((prev) => !prev)
     showMessage()
     triggerCelebrate()
+    moveFox()
     onApplyClick()
 
     if (jumpTimerRef.current !== null) {
@@ -134,181 +187,238 @@ export default function GuideCharacter({ onApplyClick }: { onApplyClick: () => v
   }
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 h-28 w-full overflow-hidden pointer-events-none">
+    <div className="fixed inset-0 z-50 pointer-events-none">
       <motion.div
-        className="absolute bottom-2 pointer-events-auto flex cursor-pointer flex-col items-center"
-        style={{ animation: "mascotWalk 20s linear infinite" }}
-        onClick={handleClick}
-        whileHover={{ scale: 1.03 }}
-        whileTap={{ scale: 0.98 }}
+        className="pointer-events-auto fixed left-0 top-0"
+        animate={{ x: position.x, y: position.y }}
+        transition={{ type: "spring", stiffness: 70, damping: 18, mass: 1.2 }}
+        style={{ opacity: viewport.width > 0 ? 1 : 0 }}
       >
-        <AnimatePresence>
-          {showBubble && (
-            <motion.div
-              className="relative mb-2 max-w-[220px] rounded-2xl border border-white/70 bg-white/95 px-4 py-2.5 text-center text-xs font-semibold text-slate-800 shadow-xl backdrop-blur-xl"
-              initial={{ opacity: 0, y: 8, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.9 }}
-              transition={{ duration: 0.25 }}
-            >
-              <div className="flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-600">
-                <Sparkles className="h-3 w-3" />
-                Fox Guide
-              </div>
-              <div className="mt-1.5 whitespace-normal leading-relaxed">{message}</div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onApplyClick()
-                }}
-                className="mt-2 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-lg shadow-cyan-500/25 transition-transform hover:scale-105"
-              >
-                Apply now
-              </button>
-              <div className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showHint && !showBubble && (
-            <motion.div
-              className="mb-1.5 rounded-full bg-cyan-500 px-3 py-1 text-[11px] font-bold text-white shadow-lg shadow-cyan-500/20"
-              initial={{ opacity: 0, y: 6, scale: 0.9 }}
-              animate={{ opacity: 1, y: [0, -3, 0], scale: 1 }}
-              exit={{ opacity: 0, y: 6, scale: 0.9 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              👆 Click me!
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <motion.div
-          className="relative"
-          animate={
-            isJumping
-              ? { y: -18, rotate: 4, scale: 1.05, scaleX: isFacingRight ? 1 : -1 }
-              : isCelebrating
-                ? { y: [0, -6, 0], rotate: [0, -8, 8, 0], scale: [1, 1.06, 1], scaleX: isFacingRight ? 1 : -1 }
-                : { y: [0, -5, 0], rotate: [-1, 2, -1], scaleX: isFacingRight ? 1 : -1 }
-          }
-          transition={
-            isJumping || isCelebrating
-              ? { type: "spring", stiffness: 320, damping: 16 }
-              : { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
-          }
-        >
-          <motion.div
-            className="absolute inset-0 -z-10 rounded-full bg-cyan-300/30 blur-3xl"
-            animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.55, 0.85, 0.55] }}
-            transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-          />
-
+        <div className="relative -translate-x-1/2 -translate-y-1/2">
           <AnimatePresence>
-            {isCelebrating &&
-              SPARKLES.map((sparkle, index) => (
-                <motion.span
-                  key={`${sparkle.x}-${sparkle.y}-${index}`}
-                  className={`absolute left-1/2 top-1/2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.9)] ${sparkle.size}`}
-                  initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                  animate={{ opacity: [0, 1, 0], x: sparkle.x, y: sparkle.y, scale: [0, 1.2, 0] }}
-                  exit={{ opacity: 0, scale: 0 }}
-                  transition={{ duration: 1.0, delay: sparkle.delay, ease: "easeOut" }}
-                />
-              ))}
+            {showBubble && (
+              <motion.div
+                className="absolute left-1/2 top-[-5.5rem] w-[min(82vw,20rem)] -translate-x-1/2 rounded-2xl border border-white/70 bg-white/95 px-4 py-2.5 text-center text-xs font-semibold text-slate-800 shadow-xl backdrop-blur-xl"
+                initial={{ opacity: 0, y: 8, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.9 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="flex items-center justify-center gap-1 text-[10px] font-black uppercase tracking-[0.28em] text-orange-600">
+                  <Sparkles className="h-3 w-3" />
+                  Fox Guide
+                </div>
+                <div className="mt-1.5 whitespace-normal leading-relaxed">{message}</div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onApplyClick()
+                  }}
+                  className="mt-2 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#ff8a2a] to-[#f97316] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-lg shadow-orange-500/25 transition-transform hover:scale-105"
+                >
+                  Apply now
+                </button>
+                <div className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white" />
+              </motion.div>
+            )}
           </AnimatePresence>
 
-          <div className="relative mx-auto h-20 w-20">
-            <motion.div
-              className="absolute left-1/2 top-0 h-12 w-12 -translate-x-1/2 rounded-full bg-gradient-to-br from-[#ffb04f] via-[#f47e2f] to-[#d9551c] shadow-[0_16px_30px_rgba(251,146,60,0.28)]"
-              style={{ boxShadow: "inset 0 2px 0 rgba(255,255,255,0.55)" }}
-            >
-              <div className="absolute left-1 top-1 h-0 w-0 border-x-[8px] border-x-transparent border-b-[14px] border-b-[#d9551c]" />
-              <div className="absolute right-1 top-1 h-0 w-0 border-x-[8px] border-x-transparent border-b-[14px] border-b-[#d9551c]" />
-              <div className="absolute left-2 top-2 h-0 w-0 border-x-[7px] border-x-transparent border-b-[12px] border-b-[#ffb04f]" />
-              <div className="absolute right-2 top-2 h-0 w-0 border-x-[7px] border-x-transparent border-b-[12px] border-b-[#ffb04f]" />
+          <AnimatePresence>
+            {showHint && !showBubble && (
               <motion.div
-                className="absolute left-1/2 top-5 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-slate-800"
-                animate={{ scaleY: isBlinking ? [1, 0.1, 1] : 1 }}
-                transition={{ duration: 0.18, ease: "easeInOut" }}
-              />
-              <motion.div
-                className="absolute left-1/2 top-7 h-2 w-4 -translate-x-1/2 rounded-b-full border-b-2 border-slate-800/80"
-                animate={{ scaleX: isCelebrating ? [1, 1.25, 1] : 1 }}
-                transition={{ duration: 0.7, ease: "easeInOut" }}
-              />
-              <motion.div
-                className="absolute left-1/2 top-8 h-2 w-2 -translate-x-1/2 rounded-[2px] bg-[#1f130b]"
-                style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
-                animate={{ y: isCelebrating ? [0, -1, 0] : 0 }}
-              />
-            </motion.div>
-
-            <motion.div
-              className="absolute left-1/2 top-5 -translate-x-1/2"
-              animate={{ rotate: isWaving ? [-8, 10, -8] : [-4, 4, -4] }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="relative h-8 w-6 rounded-t-[16px] bg-gradient-to-b from-[#1f140f] to-[#0e0a08]">
-                <div className="absolute -left-1 top-0 h-4 w-4 rotate-[-28deg] rounded-tl-full rounded-br-full bg-[#2f1c12]" />
-                <div className="absolute -right-1 top-0 h-4 w-4 rotate-[28deg] rounded-tr-full rounded-bl-full bg-[#2f1c12]" />
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="absolute left-1/2 top-11 flex -translate-x-1/2 items-end gap-0.5"
-              animate={{ y: isWaving ? [0, -3, 0] : [0, 1, 0] }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <motion.div
-                className="relative h-11 w-9 rounded-[22px] bg-gradient-to-b from-[#ff9f38] via-[#ef7d2f] to-[#d95f21] shadow-[0_16px_26px_rgba(8,145,178,0.16)]"
-                animate={{ rotate: isWaving ? -4 : -1 }}
+                className="absolute left-1/2 top-[-3rem] -translate-x-1/2 rounded-full bg-[#f97316] px-3 py-1 text-[11px] font-bold text-white shadow-lg shadow-orange-500/20"
+                initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                animate={{ opacity: 1, y: [0, -3, 0], scale: 1 }}
+                exit={{ opacity: 0, y: 6, scale: 0.9 }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <div className="absolute left-1/2 top-1.5 h-6 w-6 -translate-x-1/2 rounded-[18px] bg-[#fff1de]" />
-                <div className="absolute left-1/2 bottom-0.5 h-2.5 w-5 -translate-x-1/2 rounded-b-[14px] bg-[#fff1de]" />
+                👆 Click me!
               </motion.div>
+            )}
+          </AnimatePresence>
 
-              <motion.div
-                className="h-7 w-2.5 rounded-full bg-[#ffb96a]"
-                animate={{ rotate: isWaving ? 34 : 18, y: isWaving ? -5 : 0 }}
-                style={{ transformOrigin: "top center" }}
-              />
-              <motion.div
-                className="h-7 w-2.5 rounded-full bg-[#ffb96a]"
-                animate={{ rotate: isWaving ? -20 : -12, y: 1 }}
-                style={{ transformOrigin: "top center" }}
-              />
-            </motion.div>
-
+          <motion.div
+            className="relative"
+            animate={
+              isJumping
+                ? { y: -18, rotate: 4, scale: 1.05, scaleX: isFacingRight ? 1 : -1 }
+                : isCelebrating
+                  ? { y: [0, -6, 0], rotate: [0, -8, 8, 0], scale: [1, 1.06, 1], scaleX: isFacingRight ? 1 : -1 }
+                  : { y: [0, -5, 0], rotate: [-1, 2, -1], scaleX: isFacingRight ? 1 : -1 }
+            }
+            transition={
+              isJumping || isCelebrating
+                ? { type: "spring", stiffness: 320, damping: 16 }
+                : { duration: 1.1, repeat: Infinity, ease: "easeInOut" }
+            }
+            onClick={handleClick}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <motion.div
-              className="absolute right-[-14px] top-[30px] h-10 w-12 origin-left"
-              animate={{ rotate: isWaving ? [12, -10, 12] : [16, 22, 16] }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="absolute left-0 top-0 h-7 w-7 rounded-full bg-gradient-to-br from-[#fbb14d] via-[#f47d2e] to-[#db5d1d]" />
-              <div className="absolute left-4 top-0 h-7 w-7 rounded-full bg-gradient-to-br from-[#fff5e2] to-[#ffe0b8]" />
-            </motion.div>
-
-            <motion.div
-              className="absolute left-1/2 bottom-1 h-3 w-16 -translate-x-1/2 rounded-full bg-cyan-400/25 blur-xl"
-              animate={{ scaleX: [1, 1.14, 1], opacity: [0.55, 0.9, 0.55] }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute inset-0 -z-10 rounded-full bg-orange-300/30 blur-3xl"
+              animate={{ scale: [0.92, 1.08, 0.92], opacity: [0.55, 0.85, 0.55] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
             />
-          </div>
-        </motion.div>
-      </motion.div>
 
-      <style>{`
-        @keyframes mascotWalk {
-          0% { left: -120px; transform: scaleX(1); }
-          48% { left: calc(100% + 20px); transform: scaleX(1); }
-          50% { left: calc(100% + 20px); transform: scaleX(-1); }
-          98% { left: -120px; transform: scaleX(-1); }
-          100% { left: -120px; transform: scaleX(1); }
-        }
-      `}</style>
+            <AnimatePresence>
+              {isCelebrating &&
+                SPARKLES.map((sparkle, index) => (
+                  <motion.span
+                    key={`${sparkle.x}-${sparkle.y}-${index}`}
+                    className={`absolute left-1/2 top-1/2 rounded-full bg-orange-300 shadow-[0_0_16px_rgba(251,146,60,0.9)] ${sparkle.size}`}
+                    initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+                    animate={{ opacity: [0, 1, 0], x: sparkle.x, y: sparkle.y, scale: [0, 1.2, 0] }}
+                    exit={{ opacity: 0, scale: 0 }}
+                    transition={{ duration: 1.0, delay: sparkle.delay, ease: "easeOut" }}
+                  />
+                ))}
+            </AnimatePresence>
+
+              <div className="relative mx-auto h-24 w-24 drop-shadow-[0_18px_28px_rgba(249,115,22,0.18)]">
+                <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="foxBody" x1="0" y1="0" x2="0.95" y2="1">
+                      <stop offset="0%" stopColor="#ffb55d" />
+                      <stop offset="55%" stopColor="#f47d2f" />
+                      <stop offset="100%" stopColor="#d6531b" />
+                    </linearGradient>
+                    <linearGradient id="foxShadow" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#ffa948" />
+                      <stop offset="100%" stopColor="#be4516" />
+                    </linearGradient>
+                    <linearGradient id="foxCream" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#fff7ee" />
+                      <stop offset="100%" stopColor="#ffe9cf" />
+                    </linearGradient>
+                    <radialGradient id="foxGlow" cx="50%" cy="42%" r="58%">
+                      <stop offset="0%" stopColor="#fed7a3" stopOpacity="0.85" />
+                      <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+
+                  <motion.g
+                    animate={{ y: isWaving ? [0, -2, 0] : [0, 1, 0] }}
+                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <ellipse cx="80" cy="114" rx="28" ry="18" fill="url(#foxGlow)" opacity="0.55" />
+
+                    <motion.path
+                      d="M 49 104 C 54 85 70 74 88 74 C 105 74 116 84 118 100 C 120 118 111 129 93 133 C 74 137 58 129 51 116 C 47 111 46 108 49 104 Z"
+                      fill="url(#foxBody)"
+                      stroke="#92360d"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+
+                    <path
+                      d="M 94 82 C 107 85 115 94 116 107 C 112 118 104 125 93 126 C 101 119 104 108 103 99 C 102 92 99 86 94 82 Z"
+                      fill="#fff0dc"
+                      opacity="0.95"
+                    />
+
+                    <motion.path
+                      d="M 108 100 C 126 91 136 102 129 114 C 136 121 137 137 125 142 C 114 146 108 133 109 124 C 110 115 106 108 108 100 Z"
+                      fill="url(#foxShadow)"
+                      stroke="#92360d"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                      animate={{ rotate: isWaving ? [8, -10, 8] : [4, 10, 4] }}
+                      style={{ transformOrigin: "118px 110px" }}
+                    />
+                    <path
+                      d="M 111 104 C 121 100 127 106 126 116 C 131 122 131 133 122 137 C 115 140 111 132 112 124 C 112 116 109 109 111 104 Z"
+                      fill="#fff4e6"
+                    />
+
+                    <path
+                      d="M 58 88 C 55 66 63 48 79 42 L 84 63 Z"
+                      fill="url(#foxBody)"
+                      stroke="#92360d"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <path d="M 60 89 C 59 74 64 59 75 54 L 78 65 Z" fill="#fff7ef" />
+
+                    <path
+                      d="M 83 42 C 99 48 107 67 104 88 L 90 65 Z"
+                      fill="url(#foxBody)"
+                      stroke="#92360d"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
+                    <path d="M 84 54 C 93 59 98 71 97 85 L 89 65 Z" fill="#fff7ef" />
+
+                    <path
+                      d="M 64 86 C 70 76 80 71 91 71 C 100 72 108 78 114 87 C 108 102 97 109 82 110 C 70 109 62 101 64 86 Z"
+                      fill="url(#foxCream)"
+                    />
+                    <circle cx="84" cy="90" r="4.2" fill="#1f130b" />
+                    <circle cx="85.5" cy="88.7" r="1.1" fill="#fff8ef" />
+                    <path d="M 86 96 C 82 100 78 102 74 102" fill="none" stroke="#92360d" strokeWidth="2" strokeLinecap="round" />
+                    <path d="M 86 96 C 89 99 92 101 95 101" fill="none" stroke="#92360d" strokeWidth="2" strokeLinecap="round" />
+                    <motion.circle
+                      cx="84"
+                      cy="90"
+                      r="4.2"
+                      fill="#1f130b"
+                      animate={{ scaleY: isBlinking ? [1, 0.08, 1] : 1 }}
+                      transition={{ duration: 0.18, ease: "easeInOut" }}
+                    />
+
+                    <motion.path
+                      d="M 66 112 C 72 118 79 121 87 120"
+                      fill="none"
+                      stroke="#92360d"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      animate={{ scaleX: isCelebrating ? [1, 1.18, 1] : 1 }}
+                      style={{ transformOrigin: "76px 116px" }}
+                    />
+
+                    <motion.rect
+                      x="60"
+                      y="118"
+                      width="13"
+                      height="18"
+                      rx="6.5"
+                      fill="url(#foxBody)"
+                      stroke="#92360d"
+                      strokeWidth="2"
+                      animate={{ rotate: isWaving ? -8 : -3 }}
+                      style={{ transformOrigin: "66px 118px" }}
+                    />
+                    <motion.rect
+                      x="79"
+                      y="119"
+                      width="13"
+                      height="18"
+                      rx="6.5"
+                      fill="url(#foxBody)"
+                      stroke="#92360d"
+                      strokeWidth="2"
+                      animate={{ rotate: isWaving ? 3 : 0 }}
+                      style={{ transformOrigin: "85px 119px" }}
+                    />
+                    <motion.rect
+                      x="96"
+                      y="119"
+                      width="12"
+                      height="17"
+                      rx="6"
+                      fill="url(#foxBody)"
+                      stroke="#92360d"
+                      strokeWidth="2"
+                      animate={{ rotate: isWaving ? 8 : 3 }}
+                      style={{ transformOrigin: "101px 119px" }}
+                    />
+                  </motion.g>
+                </svg>
+              </div>
+          </motion.div>
+        </div>
+      </motion.div>
     </div>
   )
 }

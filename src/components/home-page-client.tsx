@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
@@ -16,6 +17,10 @@ import CtaSection from "@/components/ui/cta-section"
 import FAQSection from "@/components/ui/faq-section"
 import Footer from "@/components/ui/footer"
 import AuthPopup from "@/components/ui/auth-popup"
+
+const GuideCharacter = dynamic(() => import("@/components/ui/guide-character"), {
+  ssr: false,
+})
 
 type SessionUser = {
   name: string
@@ -47,7 +52,6 @@ export default function HomePageClient({ shouldOpenAuth }: { shouldOpenAuth: boo
   const router = useRouter()
   const [showAuthPopup, setShowAuthPopup] = useState(false)
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null)
-  const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -59,16 +63,13 @@ export default function HomePageClient({ shouldOpenAuth }: { shouldOpenAuth: boo
 
         if (!cancelled) {
           setSessionUser(data.authenticated ? data.user : null)
-          setAuthReady(true)
 
           if (!data.authenticated && shouldOpenAuth) {
             setShowAuthPopup(true)
           }
         }
       } catch {
-        if (!cancelled) {
-          setAuthReady(true)
-        }
+        // Ignore transient session fetch failures and render the page normally.
       }
     }
 
@@ -81,7 +82,7 @@ export default function HomePageClient({ shouldOpenAuth }: { shouldOpenAuth: boo
 
   const handleApplyClick = () => {
     if (sessionUser) {
-      router.push("/dashboard")
+      router.push("/dashboard/application")
       return
     }
 
